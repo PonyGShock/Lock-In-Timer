@@ -1,0 +1,14 @@
+# Build output
+node_modules/
+dist/
+target/
+
+# Generated from app-icon.png by `npm run icons`; not worth versioning.
+src-tauri/icons/
+src-tauri/gen/
+
+# Local scratch
+.shoot.mjs
+.interact.mjs
+*.log
+.DS_Store
