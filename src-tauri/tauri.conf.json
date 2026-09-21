@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Crema",
+  "productName": "Lock In",
   "version": "0.1.0",
-  "identifier": "io.github.ponygshock.crema",
+  "identifier": "io.github.ponygshock.lockin",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -15,7 +15,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Crema",
+        "title": "Lock In",
         "width": 356,
         "height": 580,
         "resizable": false,
@@ -39,13 +39,10 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "app",
-      "dmg"
-    ],
+    "targets": "all",
     "category": "Productivity",
     "shortDescription": "A calm pomodoro timer for the menu bar",
-    "longDescription": "Crema is a free and open source pomodoro timer that lives in the menu bar. Several timer lengths, a synthesised chime at each boundary and optional white, pink or brown noise while you work. No account, no paywall, no tracking.",
+    "longDescription": "Lock In is a free and open source pomodoro timer that lives in the menu bar. Several timer lengths, a synthesised chime at each boundary and optional white, pink or brown noise while you work. No account, no paywall, no tracking.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -55,6 +52,14 @@
     ],
     "macOS": {
       "minimumSystemVersion": "10.15"
+    },
+    "publisher": "PonyGShock",
+    "homepage": "https://github.com/PonyGShock/Lock-In-Timer",
+    "licenseFile": "../LICENSE",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
     }
   }
 }

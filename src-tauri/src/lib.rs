@@ -1,33 +1,43 @@
 mod audio;
 mod commands;
 mod engine;
+#[cfg(desktop)]
 mod tray;
 mod window;
 
 use std::thread;
 use std::time::Duration;
 
-use crema_core::{Phase, RunState, Snapshot, Transition};
-use tauri::{Manager, WindowEvent};
+use lockin_core::{Phase, RunState, Snapshot, Transition};
+use tauri::Manager;
 use tauri_plugin_notification::NotificationExt;
 
 use crate::audio::Audio;
 use crate::engine::Engine;
-use crema_core::settings::Settings;
+use lockin_core::settings::Settings;
 
 /// How often the clock is advanced. Fine enough that a pause feels immediate,
 /// coarse enough to stay invisible in a CPU graph.
 const TICK: Duration = Duration::from_millis(200);
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_positioner::init())
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            None,
-        ))
+        .plugin(tauri_plugin_opener::init());
+
+    // A tray, a login item and a window that positions itself under one are
+    // all desktop ideas. On a phone the app is simply the app.
+    #[cfg(desktop)]
+    let builder =
+        builder
+            .plugin(tauri_plugin_positioner::init())
+            .plugin(tauri_plugin_autostart::init(
+                tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+                None,
+            ));
+
+    builder
         .invoke_handler(tauri::generate_handler![
             commands::get_state,
             commands::timer_toggle,
@@ -44,7 +54,7 @@ pub fn run() {
             commands::quit_app,
         ])
         .setup(|app| {
-            // No dock icon and no app switcher entry: Crema lives in the menu
+            // No dock icon and no app switcher entry: Lock In lives in the menu
             // bar, and a second place to find it would only be clutter.
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -55,38 +65,45 @@ pub fn run() {
                 .path()
                 .app_config_dir()
                 .map(|dir| dir.join("settings.json"))
-                .unwrap_or_else(|_| std::path::PathBuf::from("crema-settings.json"));
+                .unwrap_or_else(|_| std::path::PathBuf::from("lockin-settings.json"));
 
             let settings = Settings::load(&settings_path);
             let engine = Engine::new(settings, settings_path, Audio::spawn());
             engine.sync_noise();
             app.manage(engine);
 
-            tray::build(&handle)?;
-
-            let state = handle.state::<Engine>().state();
-            tray::apply_snapshot(&handle, &state.timer, state.settings.show_clock_in_menu_bar);
+            #[cfg(desktop)]
+            {
+                tray::build(&handle)?;
+                let state = handle.state::<Engine>().state();
+                tray::apply_snapshot(&handle, &state.timer, state.settings.show_clock_in_menu_bar);
+            }
 
             spawn_tick_loop(handle);
             Ok(())
         })
-        .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { api, .. } = event {
-                // Closing the popover should put Crema away, not end the
-                // session that is still running behind it.
-                api.prevent_close();
-                let _ = window.hide();
-            }
+        .on_window_event(|_window, _event| {
+            #[cfg(desktop)]
+            {
+                use tauri::WindowEvent;
 
-            // While developing, a popover that vanishes the moment devtools
-            // take focus is unusable.
-            #[cfg(not(debug_assertions))]
-            if let WindowEvent::Focused(false) = event {
-                let _ = window.hide();
+                if let WindowEvent::CloseRequested { api, .. } = _event {
+                    // Closing the popover should put Lock In away, not end the
+                    // session that is still running behind it.
+                    api.prevent_close();
+                    let _ = _window.hide();
+                }
+
+                // While developing, a popover that vanishes the moment devtools
+                // take focus is unusable.
+                #[cfg(not(debug_assertions))]
+                if let WindowEvent::Focused(false) = _event {
+                    let _ = _window.hide();
+                }
             }
         })
         .run(tauri::generate_context!())
-        .expect("crema failed to start");
+        .expect("Lock In failed to start");
 }
 
 fn spawn_tick_loop(handle: tauri::AppHandle) {
@@ -112,6 +129,7 @@ fn spawn_tick_loop(handle: tauri::AppHandle) {
             );
             if last.as_ref() != Some(&fingerprint) {
                 last = Some(fingerprint);
+                #[cfg(desktop)]
                 tray::apply_snapshot(&handle, &state.timer, state.settings.show_clock_in_menu_bar);
                 window::broadcast(&handle, &state);
             }

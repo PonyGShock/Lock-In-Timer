@@ -1,5 +1,5 @@
 [package]
-name = "crema"
+name = "lockin"
 description = "A calm pomodoro timer that lives in the menu bar"
 version.workspace = true
 edition.workspace = true
@@ -10,14 +10,14 @@ repository.workspace = true
 [lib]
 # Mobile targets link the app as a library, so the desktop binary is a thin
 # shell over this crate rather than the other way round.
-name = "crema_lib"
+name = "lockin_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-crema-core = { workspace = true }
+lockin-core = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }

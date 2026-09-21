@@ -1,15 +1,16 @@
 use tauri::{AppHandle, State};
 
 use crate::engine::{AppState, Engine};
-use crate::tray;
 use crate::window;
-use crema_core::settings::Settings;
+use lockin_core::settings::Settings;
 
 /// Pushes the latest state at the menu bar after a command has changed it, so
 /// the title never waits up to a tick to catch up with a click.
 fn refresh(app: &AppHandle, engine: &Engine) -> AppState {
     let state = engine.state();
-    tray::apply_snapshot(app, &state.timer, state.settings.show_clock_in_menu_bar);
+    #[cfg(desktop)]
+    crate::tray::apply_snapshot(app, &state.timer, state.settings.show_clock_in_menu_bar);
+    let _ = app;
     state
 }
 
@@ -111,7 +112,7 @@ fn apply_launch_at_login(app: &AppHandle, enabled: bool) {
         manager.disable()
     };
     if let Err(error) = result {
-        eprintln!("crema: could not change launch at login: {error}");
+        eprintln!("lock-in: could not change launch at login: {error}");
     }
 }
 

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/PonyGShock/Lock-In-Timer/discussions
+    about: For anything that is not clearly a bug or a specific request.
+  - name: Security vulnerability
+    url: https://github.com/PonyGShock/Lock-In-Timer/security/advisories/new
+    about: Please report these privately rather than in a public issue.

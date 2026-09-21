@@ -25,8 +25,8 @@ jobs:
       - run: cargo fmt --all -- --check
       # The core crate needs no system libraries, so the logic, the synthesis
       # and the settings file are all testable on a plain Linux runner.
-      - run: cargo test -p crema-core
-      - run: cargo clippy -p crema-core --all-targets -- -D warnings
+      - run: cargo test -p lockin-core
+      - run: cargo clippy -p lockin-core --all-targets -- -D warnings
 
   frontend:
     name: Frontend
@@ -41,14 +41,26 @@ jobs:
       - run: npm run build
 
   app:
-    name: macOS app
-    runs-on: macos-latest
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS app
+            os: macos-latest
+            bundles: app
+          - name: Windows app
+            os: windows-latest
+            bundles: nsis
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -58,5 +70,5 @@ jobs:
       # it present before the Rust crate is compiled.
       - run: npm run icons
       - run: npm run build
-      - run: cargo clippy -p crema --all-targets -- -D warnings
-      - run: npm run tauri build -- --bundles app
+      - run: cargo clippy -p lockin --all-targets -- -D warnings
+      - run: npm run tauri build -- --bundles ${{ matrix.bundles }}

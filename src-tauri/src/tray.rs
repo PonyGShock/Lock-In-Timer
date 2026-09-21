@@ -1,4 +1,4 @@
-use crema_core::{RunState, Snapshot};
+use lockin_core::{RunState, Snapshot};
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
@@ -7,7 +7,7 @@ use tauri::{AppHandle, Manager, Wry};
 use crate::engine::Engine;
 use crate::window;
 
-pub const TRAY_ID: &str = "crema-tray";
+pub const TRAY_ID: &str = "lockin-tray";
 
 /// Menu entries whose labels change with the timer, kept so they can be
 /// updated in place rather than by rebuilding the whole menu each second.
@@ -16,11 +16,11 @@ pub struct TrayMenuItems {
 }
 
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, "open", "Open Crema", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", "Open Lock In", true, None::<&str>)?;
     let toggle = MenuItem::with_id(app, "toggle", "Start focus", true, None::<&str>)?;
     let skip = MenuItem::with_id(app, "skip", "Skip to next phase", true, None::<&str>)?;
     let reset = MenuItem::with_id(app, "reset", "Reset cycle", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Crema", true, Some("CmdOrCtrl+Q"))?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Lock In", true, Some("CmdOrCtrl+Q"))?;
 
     let menu = Menu::with_items(
         app,

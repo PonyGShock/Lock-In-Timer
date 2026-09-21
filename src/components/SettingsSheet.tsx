@@ -2,7 +2,7 @@ import { CHIME_VOICES, type AppState, type Settings, type Theme } from "../types
 import { openExternal } from "../bridge";
 import { BackIcon, Group, Row, Segmented, Slider, Stepper, Switch } from "./ui";
 
-const REPOSITORY = "https://github.com/PonyGShock/crema";
+const REPOSITORY = "https://github.com/PonyGShock/Lock-In-Timer";
 
 const THEMES: { id: Theme; label: string }[] = [
   { id: "system", label: "System" },
@@ -223,12 +223,12 @@ export function SettingsSheet({
             <span className="link">Source code and issues</span>
           </div>
           <div className="row row--tappable" onClick={onQuit}>
-            <span className="link">Quit Crema</span>
+            <span className="link">Quit Lock In</span>
           </div>
         </Group>
 
         <p className="about">
-          Crema is free and open source, for everyone, forever.
+          Lock In is free and open source, for everyone, forever.
           <br />
           No account, no paywall, nothing sent anywhere.
         </p>

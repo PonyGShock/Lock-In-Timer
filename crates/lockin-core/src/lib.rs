@@ -1,4 +1,4 @@
-//! Core logic for Crema: a calm pomodoro timer.
+//! Core logic for Lock In: a calm pomodoro timer.
 //!
 //! This crate holds the parts worth testing on their own — the phase state
 //! machine, the audio synthesis and the settings file — and depends on no

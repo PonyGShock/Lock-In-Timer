@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
 
-use crema_core::{
+use lockin_core::{
     chime::frequency_for,
     noise::NoiseKind,
     timer::{builtin_presets, Preset, Snapshot, Timer, Transition},
@@ -12,7 +12,7 @@ use crema_core::{
 use serde::Serialize;
 
 use crate::audio::Audio;
-use crema_core::settings::{Settings, CUSTOM_PRESET_ID};
+use lockin_core::settings::{Settings, CUSTOM_PRESET_ID};
 
 /// Everything the window needs in a single payload, so the UI never has to
 /// stitch several calls together.
@@ -285,7 +285,7 @@ impl Engine {
     pub fn persist(&self) {
         let settings = self.settings.lock().unwrap().clone();
         if let Err(error) = settings.save(&self.settings_path) {
-            eprintln!("crema: could not save settings: {error}");
+            eprintln!("lock-in: could not save settings: {error}");
         }
     }
 }

@@ -12,7 +12,9 @@ export function Ring({ timer }: { timer: Snapshot }) {
 
   return (
     <div className="ring" data-state={timer.state}>
-      <svg width={SIZE} height={SIZE} aria-hidden="true">
+      {/* Sized by CSS through the viewBox, so the ring can grow on a phone
+          without any of these numbers changing. */}
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width="100%" height="100%" aria-hidden="true">
         <circle className="ring__track" cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} />
         <circle
           className="ring__progress"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draw Crema's icons from scratch.
+"""Draw Lock In's icons from scratch.
 
 Everything is described as signed distance fields, so one sample per pixel is
 enough for clean edges and the whole thing runs on a stock Python with no

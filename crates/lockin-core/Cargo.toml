@@ -1,6 +1,6 @@
 [package]
-name = "crema-core"
-description = "Timer state machine and audio synthesis for Crema, a calm pomodoro timer"
+name = "lockin-core"
+description = "Timer state machine and audio synthesis for Lock In, a calm pomodoro timer"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

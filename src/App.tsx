@@ -88,7 +88,7 @@ export default function App() {
   return (
     <div className="card" data-phase={timer.phase}>
       <header className="header">
-        <span className="wordmark">Crema</span>
+        <span className="wordmark">Lock In</span>
         <button
           className="icon-button"
           onClick={() => setSettingsOpen(true)}

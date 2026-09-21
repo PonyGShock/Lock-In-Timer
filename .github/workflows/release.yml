@@ -9,13 +9,22 @@ permissions:
   contents: write
 
 jobs:
-  macos:
-    name: macOS (${{ matrix.target }})
-    runs-on: macos-latest
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        target: [aarch64-apple-darwin, x86_64-apple-darwin]
+        include:
+          - name: macOS (Apple silicon)
+            os: macos-latest
+            target: aarch64-apple-darwin
+          - name: macOS (Intel)
+            os: macos-latest
+            target: x86_64-apple-darwin
+          - name: Windows (x64)
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -36,9 +45,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: Crema ${{ github.ref_name }}
+          releaseName: Lock In ${{ github.ref_name }}
           releaseDraft: true
-          # Builds are unsigned on purpose: a Developer ID costs money and this
-          # app does not. The README tells people how to clear the quarantine
-          # flag. Adding signing later means setting APPLE_* secrets here.
+          releaseBody: |
+            See [CHANGELOG](https://github.com/PonyGShock/Lock-In-Timer/commits/${{ github.ref_name }}).
+
+            **macOS:** these builds are unsigned, so macOS will claim the app
+            is damaged. It is not — it is just unsigned. Run
+            `xattr -cr "/Applications/Lock In.app"` once after installing.
+
+            **Windows:** SmartScreen will warn about an unrecognised app.
+            Choose "More info", then "Run anyway".
+
+            Signing costs money and this app does not. If you would rather not
+            take that on faith, the source builds in about five minutes.
+          # Unsigned on purpose. Adding signing later means setting the
+          # APPLE_* secrets; see docs/DISTRIBUTION.md.
           args: --target ${{ matrix.target }}

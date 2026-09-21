@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use crema_core::{
+use lockin_core::{
     chime,
     noise::{NoiseKind, NoiseSource, DEFAULT_FADE_MS},
     ChimeVoice,
@@ -53,7 +53,7 @@ impl Audio {
     pub fn spawn() -> Self {
         let (tx, rx) = mpsc::sync_channel::<Command>(64);
         thread::Builder::new()
-            .name("crema-audio".into())
+            .name("lockin-audio".into())
             .spawn(move || run(rx))
             .expect("audio thread should spawn");
         Audio { tx }
@@ -140,13 +140,13 @@ impl Source for NoiseStream {
 fn run(rx: mpsc::Receiver<Command>) {
     let device = OutputStream::try_default();
     let Ok((_stream, handle)) = device else {
-        eprintln!("crema: no audio output device; running silently");
+        eprintln!("lock-in: no audio output device; running silently");
         drain(rx);
         return;
     };
 
     let (Ok(noise_sink), Ok(chime_sink)) = (Sink::try_new(&handle), Sink::try_new(&handle)) else {
-        eprintln!("crema: could not open audio sinks; running silently");
+        eprintln!("lock-in: could not open audio sinks; running silently");
         drain(rx);
         return;
     };

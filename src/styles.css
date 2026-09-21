@@ -1,4 +1,4 @@
-/* Crema's design system.
+/* Lock In's design system.
    Warm neutrals, one accent that shifts with the phase, and motion that
    settles rather than snaps. */
 
@@ -10,7 +10,6 @@
   --ink-3: #a5968b;
   --line: #ece2d5;
   --track: #ece2d5;
-  --sheen: rgba(255, 255, 255, 0.72);
 
   --focus: #c08552;
   --short-break: #7d9476;
@@ -38,7 +37,6 @@
     --ink-3: #7e7166;
     --line: #322a23;
     --track: #302822;
-    --sheen: rgba(255, 255, 255, 0.05);
 
     --focus: #d99f6a;
     --short-break: #96ac8e;
@@ -56,7 +54,6 @@
   --ink-3: #7e7166;
   --line: #322a23;
   --track: #302822;
-  --sheen: rgba(255, 255, 255, 0.05);
 
   --focus: #d99f6a;
   --short-break: #96ac8e;
@@ -141,7 +138,7 @@ button {
   --accent: var(--long-break);
 }
 
-/* The crema: a soft wash of the phase colour pooling at the top. */
+/* A soft wash of the phase colour pooling at the top of the card. */
 .card::before {
   content: "";
   position: absolute;
@@ -681,5 +678,46 @@ button {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+}
+
+/* --- phone layout ------------------------------------------------------ */
+
+/* On a phone the app is the whole screen, not a card floating over a
+   desktop, so drop the popover framing and respect the notch. */
+@media (max-width: 480px) and (min-height: 600px) {
+  body {
+    padding: 0;
+  }
+
+  .card {
+    border-radius: 0;
+    box-shadow: none;
+    outline: none;
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .ring {
+    width: min(64vw, 260px);
+    height: min(64vw, 260px);
+  }
+
+  .ring__clock {
+    font-size: min(15vw, 60px);
+  }
+
+  /* Comfortable touch targets, which 30px buttons are not. */
+  .primary {
+    height: 54px;
+  }
+
+  .secondary {
+    height: 42px;
+  }
+
+  .icon-button {
+    width: 40px;
+    height: 40px;
   }
 }

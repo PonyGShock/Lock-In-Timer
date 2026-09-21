@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn partial_files_fill_in_the_rest() {
-        let dir = std::env::temp_dir().join(format!("crema-partial-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("lockin-partial-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("settings.json");
         fs::write(&path, r#"{"noiseKind":"pink","chimeVolume":0.25}"#).unwrap();
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn a_corrupt_file_does_not_break_startup() {
-        let dir = std::env::temp_dir().join(format!("crema-corrupt-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("lockin-corrupt-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("settings.json");
         fs::write(&path, "}{ not json at all").unwrap();
@@ -214,7 +214,7 @@ mod tests {
 
     #[test]
     fn settings_survive_a_save_and_load_round_trip() {
-        let dir = std::env::temp_dir().join(format!("crema-roundtrip-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("lockin-roundtrip-{}", std::process::id()));
         let path = dir.join("nested").join("settings.json");
 
         let original = Settings {

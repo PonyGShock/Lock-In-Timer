@@ -5,7 +5,7 @@ import type { AppState } from "./types";
 
 export const inTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
-const STATE_EVENT = "crema://state";
+const STATE_EVENT = "lockin://state";
 
 export async function call<T = AppState>(
   command: string,
