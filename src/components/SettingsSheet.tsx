@@ -175,19 +175,6 @@ export function SettingsSheet({
               onChange={(noiseVolume) => onPatch({ noiseVolume })}
             />
           </Row>
-          <Row title="Tone" stack>
-            <Slider
-              label="Noise tone"
-              value={settings.noiseTone}
-              onChange={(noiseTone) => onPatch({ noiseTone })}
-            />
-            {/* Labelling the ends of the track, rather than describing them in
-                a sentence, stops "on the left" being read as a speaker. */}
-            <div className="range-ends">
-              <span>Muffled</span>
-              <span>Bright</span>
-            </div>
-          </Row>
         </Group>
 
         <Group title="App">

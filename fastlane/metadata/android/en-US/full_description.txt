@@ -16,11 +16,10 @@ is clean and small. Choose a soft bell, a singing bowl or a wooden block.
 Focus ends on a lower note than a break, so you can tell them apart without
 looking at the screen.
 
-DEEP NOISE, RAIN, OR A LOW DRONE
-Optional background sound while you work, with its own volume and a tone
-control that runs from muffled and distant to fully open. Every sound is
-generated as it plays, so none of it ever loops. It fades in and out gently
-and stops on its own when the session does.
+A DEEP, LOW RUMBLE
+Optional background sound while you work, with its own volume. It is
+generated as it plays rather than looped from a recording, fades in and out
+gently, and stops on its own when the session does.
 
 BREAKS THAT LOOK AFTER THEMSELVES
 Breaks can start automatically when focus ends. Focus does not start

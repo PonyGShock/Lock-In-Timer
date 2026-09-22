@@ -96,7 +96,7 @@ body.web {
 }
 body.web #root {
   width: 356px;
-  height: 624px;
+  height: 580px;
 }
 
 #root {
@@ -194,8 +194,8 @@ button {
   /* safe centring keeps the first chip reachable if a long custom label
      ever pushes the row into scrolling. */
   justify-content: safe center;
-  gap: 5px;
-  padding: 6px 12px 2px;
+  gap: 4px;
+  padding: 6px 10px 2px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -205,9 +205,10 @@ button {
 
 .chip {
   flex: none;
-  padding: 6px 11px;
+  /* All five have to fit 356px without scrolling, or Custom is unreachable. */
+  padding: 6px 9px;
   border-radius: var(--radius-pill);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--ink-2);
   white-space: nowrap;
@@ -243,6 +244,9 @@ button {
 
 .ring {
   position: relative;
+  /* Never shrink. The SVG is rotated a quarter turn, so a box that is no
+     longer square overflows its own bounds and paints over the presets. */
+  flex: none;
   width: 194px;
   height: 194px;
   display: grid;
@@ -424,14 +428,6 @@ button {
   text-overflow: ellipsis;
 }
 
-.shelf__kinds {
-  display: flex;
-  padding: 0 4px 4px;
-}
-.shelf__kinds .segmented {
-  flex: 1;
-}
-
 .footer {
   flex: none;
   padding: 0 16px 12px;
@@ -494,14 +490,6 @@ button {
   background: var(--bg);
   color: var(--ink);
   box-shadow: 0 1px 2px rgba(58, 43, 33, 0.14);
-}
-
-.range-ends {
-  display: flex;
-  justify-content: space-between;
-  margin-top: -4px;
-  font-size: 10.5px;
-  color: var(--ink-3);
 }
 
 .slider {
@@ -693,7 +681,10 @@ button {
 
 /* On a phone the app is the whole screen, not a card floating over a
    desktop, so drop the popover framing and respect the notch. */
-@media (max-width: 480px) and (min-height: 600px) {
+/* `pointer: coarse` is the part that matters. Without it this matched the
+   desktop popover too, which is narrow and tall by design, and blew the ring
+   and the buttons up until they collided. */
+@media (max-width: 480px) and (min-height: 600px) and (pointer: coarse) {
   body {
     padding: 0;
   }
@@ -710,6 +701,7 @@ button {
     width: min(64vw, 260px);
     height: min(64vw, 260px);
   }
+
 
   .ring__clock {
     font-size: min(15vw, 60px);

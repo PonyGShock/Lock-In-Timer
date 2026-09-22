@@ -2,7 +2,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::chime::ChimeVoice;
-use crate::noise::NoiseKind;
 use crate::timer::{default_preset, preset_by_id, Behavior, Preset};
 use chrono::Local;
 use serde::{Deserialize, Serialize};
@@ -21,9 +20,7 @@ pub struct Settings {
     pub chime_volume: f32,
 
     pub noise_enabled: bool,
-    pub noise_kind: NoiseKind,
     pub noise_volume: f32,
-    pub noise_tone: f32,
     pub noise_during_breaks: bool,
 
     pub notifications_enabled: bool,
@@ -58,9 +55,7 @@ impl Default for Settings {
             chime_volume: 0.7,
 
             noise_enabled: false,
-            noise_kind: NoiseKind::Deep,
             noise_volume: 0.35,
-            noise_tone: 0.55,
             noise_during_breaks: false,
 
             notifications_enabled: true,
@@ -79,7 +74,6 @@ impl Settings {
     pub fn sanitized(mut self) -> Self {
         self.chime_volume = self.chime_volume.clamp(0.0, 1.0);
         self.noise_volume = self.noise_volume.clamp(0.0, 1.0);
-        self.noise_tone = self.noise_tone.clamp(0.0, 1.0);
         self.custom_preset = self.custom_preset.sanitized();
         self.custom_preset.id = CUSTOM_PRESET_ID.to_string();
         if preset_by_id(&self.preset_id).is_none() && self.preset_id != CUSTOM_PRESET_ID {
@@ -157,7 +151,6 @@ mod tests {
         let settings = Settings {
             chime_volume: 9.0,
             noise_volume: -3.0,
-            noise_tone: 5.0,
             preset_id: "nonsense".to_string(),
             ..Settings::default()
         }
@@ -165,7 +158,6 @@ mod tests {
 
         assert_eq!(settings.chime_volume, 1.0);
         assert_eq!(settings.noise_volume, 0.0);
-        assert_eq!(settings.noise_tone, 1.0);
         assert_eq!(settings.preset_id, default_preset().id);
     }
 
@@ -191,10 +183,11 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("lockin-partial-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("settings.json");
+        // noiseKind is a field this version no longer has; it must be ignored,
+        // not treated as a parse failure.
         fs::write(&path, r#"{"noiseKind":"rain","chimeVolume":0.25}"#).unwrap();
 
         let settings = Settings::load(&path);
-        assert_eq!(settings.noise_kind, NoiseKind::Rain);
         assert_eq!(settings.chime_volume, 0.25);
         assert_eq!(settings.preset_id, default_preset().id);
 
@@ -219,7 +212,6 @@ mod tests {
 
         let original = Settings {
             noise_enabled: true,
-            noise_kind: NoiseKind::Rain,
             chime_voice: ChimeVoice::Bowl,
             preset_id: "deep".to_string(),
             ..Settings::default()

@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import { call, onState } from "./bridge";
 import { Ring } from "./components/Ring";
 import { SettingsSheet } from "./components/SettingsSheet";
-import { GearIcon, Segmented, Slider, Switch, WaveIcon } from "./components/ui";
-import { NOISE_KINDS, type AppState, type NoiseKind, type Settings } from "./types";
+import { GearIcon, Slider, Switch, WaveIcon } from "./components/ui";
+import type { AppState, Settings } from "./types";
 
 export default function App() {
   const [state, setState] = useState<AppState | null>(null);
@@ -83,8 +83,6 @@ export default function App() {
   const untouched =
     timer.state === "idle" && timer.round === 1 && timer.progress === 0 && timer.phase === "focus";
 
-  const noiseKind = NOISE_KINDS.find((kind) => kind.id === settings.noiseKind);
-
   return (
     <div className="card" data-phase={timer.phase}>
       <header className="header">
@@ -149,7 +147,7 @@ export default function App() {
           <div className="shelf__label">
             <span className="shelf__title">Ambient noise</span>
             <span className="shelf__hint">
-              {settings.noiseEnabled ? noiseKind?.hint : "Off"}
+              {settings.noiseEnabled ? "Low and rumbling, like distant surf" : "Off"}
             </span>
           </div>
           <Switch
@@ -159,22 +157,13 @@ export default function App() {
           />
         </div>
         {settings.noiseEnabled && (
-          <>
-            <div className="shelf__kinds">
-              <Segmented<NoiseKind>
-                value={settings.noiseKind}
-                options={NOISE_KINDS}
-                onChange={(noiseKind) => patch({ noiseKind })}
-              />
-            </div>
-            <div className="shelf__row" style={{ height: 30 }}>
-              <Slider
-                label="Noise volume"
-                value={settings.noiseVolume}
-                onChange={(noiseVolume) => patch({ noiseVolume })}
-              />
-            </div>
-          </>
+          <div className="shelf__row" style={{ height: 30 }}>
+            <Slider
+              label="Noise volume"
+              value={settings.noiseVolume}
+              onChange={(noiseVolume) => patch({ noiseVolume })}
+            />
+          </div>
         )}
       </div>
 

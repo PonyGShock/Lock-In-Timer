@@ -11,7 +11,7 @@ pub mod settings;
 pub mod timer;
 
 pub use chime::{frequency_for, ChimeVoice};
-pub use noise::{NoiseKind, NoiseSource, DEFAULT_FADE_MS};
+pub use noise::{NoiseSource, DEFAULT_FADE_MS};
 pub use settings::{Settings, Theme, CUSTOM_PRESET_ID};
 pub use timer::{
     builtin_presets, default_preset, format_clock, preset_by_id, Behavior, Phase, Preset, RunState,

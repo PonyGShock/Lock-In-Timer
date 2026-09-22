@@ -3,7 +3,6 @@
 
 export type Phase = "focus" | "shortBreak" | "longBreak";
 export type RunState = "idle" | "running" | "paused";
-export type NoiseKind = "deep" | "rain" | "hum";
 export type ChimeVoice = "bell" | "bowl" | "wood";
 export type Theme = "system" | "light" | "dark";
 
@@ -45,9 +44,7 @@ export interface Settings {
   chimeVolume: number;
 
   noiseEnabled: boolean;
-  noiseKind: NoiseKind;
   noiseVolume: number;
-  noiseTone: number;
   noiseDuringBreaks: boolean;
 
   notificationsEnabled: boolean;
@@ -64,12 +61,6 @@ export interface AppState {
   settings: Settings;
   presets: Preset[];
 }
-
-export const NOISE_KINDS: { id: NoiseKind; label: string; hint: string }[] = [
-  { id: "deep", label: "Deep", hint: "Low and rumbling, like distant surf" },
-  { id: "rain", label: "Rain", hint: "Steady rainfall on a window" },
-  { id: "hum", label: "Hum", hint: "A low drone with a slow pulse" },
-];
 
 export const CHIME_VOICES: { id: ChimeVoice; label: string }[] = [
   { id: "bell", label: "Bell" },

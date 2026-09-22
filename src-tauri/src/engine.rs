@@ -5,7 +5,6 @@ use std::time::Instant;
 
 use lockin_core::{
     chime::frequency_for,
-    noise::NoiseKind,
     timer::{builtin_presets, Preset, Snapshot, Timer, Transition},
     Phase, RunState,
 };
@@ -24,14 +23,12 @@ pub struct AppState {
     pub presets: Vec<Preset>,
 }
 
-/// The noise configuration currently handed to the audio thread. Compared as
-/// integers so float jitter never counts as a change.
+/// The noise configuration currently handed to the audio thread. The volume
+/// is compared as an integer so float jitter never counts as a change.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct NoiseWish {
     enabled: bool,
-    kind: NoiseKind,
     volume: u32,
-    tone: u32,
 }
 
 pub struct Engine {
@@ -262,9 +259,7 @@ impl Engine {
 
         let wish = NoiseWish {
             enabled: should_play,
-            kind: settings.noise_kind,
             volume: (settings.noise_volume * 1000.0) as u32,
-            tone: (settings.noise_tone * 1000.0) as u32,
         };
 
         let mut last = self.last_noise.lock().unwrap();
@@ -274,12 +269,7 @@ impl Engine {
         *last = Some(wish);
         drop(last);
 
-        self.audio.set_noise(
-            should_play,
-            settings.noise_kind,
-            settings.noise_volume,
-            settings.noise_tone,
-        );
+        self.audio.set_noise(should_play, settings.noise_volume);
     }
 
     pub fn persist(&self) {

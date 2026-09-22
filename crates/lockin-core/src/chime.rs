@@ -49,42 +49,42 @@ impl ChimeVoice {
     fn partials(self) -> &'static [(f32, f32, f32, f32)] {
         match self {
             ChimeVoice::Bell => &[
-                (1.00, 1.00, 0.52, 0.0),
-                (2.00, 0.50, 0.38, 0.0),
-                (2.98, 0.32, 0.27, 0.0),
-                (4.03, 0.18, 0.19, 0.0),
-                (5.43, 0.09, 0.14, 0.0),
-                (6.79, 0.05, 0.10, 0.0),
+                (1.00, 1.00, 1.03, 0.0),
+                (2.00, 0.50, 0.75, 0.0),
+                (2.98, 0.32, 0.53, 0.0),
+                (4.03, 0.18, 0.37, 0.0),
+                (5.43, 0.09, 0.27, 0.0),
+                (6.79, 0.05, 0.19, 0.0),
             ],
             ChimeVoice::Bowl => &[
-                (1.00, 1.00, 0.92, 0.0),
+                (1.00, 1.00, 1.71, 0.0),
                 // The detuned twin beats slowly against its partner, which is
                 // what gives a real bowl its breathing quality.
-                (1.00, 0.85, 0.92, 0.7),
-                (2.72, 0.42, 0.62, 0.0),
-                (2.72, 0.30, 0.62, 1.1),
-                (5.38, 0.14, 0.38, 0.0),
+                (1.00, 0.85, 1.71, 0.7),
+                (2.72, 0.42, 1.15, 0.0),
+                (2.72, 0.30, 1.15, 1.1),
+                (5.38, 0.14, 0.71, 0.0),
             ],
             ChimeVoice::Wood => &[
-                (1.00, 1.00, 0.27, 0.0),
-                (3.12, 0.44, 0.16, 0.0),
-                (6.71, 0.16, 0.09, 0.0),
+                (1.00, 1.00, 0.40, 0.0),
+                (3.12, 0.44, 0.24, 0.0),
+                (6.71, 0.16, 0.13, 0.0),
             ],
         }
     }
 
     /// How long one strike lasts, tail included.
     ///
-    /// These are notification sounds, not instrument samples. A real singing
-    /// bowl rings for half a minute; waiting that long to get back to work is
-    /// worse than a shorter tail that is obviously deliberate. Each voice's
-    /// partials are tuned to have decayed to near nothing by this point, so
-    /// the sound ends rather than being cut off.
+    /// Each voice's partials are tuned so that by this point the sound has
+    /// decayed to near nothing on its own. That matters more than the number
+    /// itself: an earlier version cut every chime off while it was still at a
+    /// fifth of its volume, which is audible and much more irritating than a
+    /// chime that simply takes a while to fade.
     fn duration_secs(self) -> f32 {
         match self {
-            ChimeVoice::Wood => 1.0,
-            ChimeVoice::Bell => 1.9,
-            ChimeVoice::Bowl => 3.3,
+            ChimeVoice::Wood => 1.4,
+            ChimeVoice::Bell => 3.6,
+            ChimeVoice::Bowl => 6.0,
         }
     }
 }
@@ -226,9 +226,9 @@ mod tests {
     #[test]
     fn each_voice_lasts_as_long_as_it_says() {
         for (voice, expected) in [
-            (ChimeVoice::Wood, 1.0),
-            (ChimeVoice::Bell, 1.9),
-            (ChimeVoice::Bowl, 3.3),
+            (ChimeVoice::Wood, 1.4),
+            (ChimeVoice::Bell, 3.6),
+            (ChimeVoice::Bowl, 6.0),
         ] {
             let measured = length_secs(voice);
             assert!(

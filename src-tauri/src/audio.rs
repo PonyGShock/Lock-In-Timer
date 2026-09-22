@@ -14,7 +14,7 @@ use std::time::Duration;
 
 use lockin_core::{
     chime,
-    noise::{NoiseKind, NoiseSource, DEFAULT_FADE_MS},
+    noise::{NoiseSource, DEFAULT_FADE_MS},
     ChimeVoice,
 };
 use rodio::buffer::SamplesBuffer;
@@ -27,14 +27,9 @@ const BLOCK_FRAMES: usize = 512;
 const POLL: Duration = Duration::from_millis(200);
 
 enum Command {
-    /// Idempotent: send the whole desired noise state and let the thread
-    /// work out whether that means fading up, down or just retuning.
-    SetNoise {
-        enabled: bool,
-        kind: NoiseKind,
-        volume: f32,
-        tone: f32,
-    },
+    /// Idempotent: send the whole desired state and let the thread work out
+    /// whether that means fading up or down.
+    SetNoise { enabled: bool, volume: f32 },
     Chime {
         voice: ChimeVoice,
         frequency: f32,
@@ -64,13 +59,8 @@ impl Audio {
         let _ = self.tx.try_send(command);
     }
 
-    pub fn set_noise(&self, enabled: bool, kind: NoiseKind, volume: f32, tone: f32) {
-        self.send(Command::SetNoise {
-            enabled,
-            kind,
-            volume,
-            tone,
-        });
+    pub fn set_noise(&self, enabled: bool, volume: f32) {
+        self.send(Command::SetNoise { enabled, volume });
     }
 
     pub fn chime(&self, voice: ChimeVoice, frequency: f32, gain: f32) {
@@ -155,11 +145,7 @@ fn run(rx: mpsc::Receiver<Command>) {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos() as u64)
         .unwrap_or(0x5EED);
-    let state = Arc::new(Mutex::new(NoiseSource::new(
-        NoiseKind::Deep,
-        SAMPLE_RATE,
-        seed,
-    )));
+    let state = Arc::new(Mutex::new(NoiseSource::new(SAMPLE_RATE, seed)));
 
     noise_sink.append(NoiseStream::new(Arc::clone(&state)));
     noise_sink.pause();
@@ -167,19 +153,10 @@ fn run(rx: mpsc::Receiver<Command>) {
 
     loop {
         match rx.recv_timeout(POLL) {
-            Ok(Command::SetNoise {
-                enabled,
-                kind,
-                volume,
-                tone,
-            }) => {
+            Ok(Command::SetNoise { enabled, volume }) => {
                 let mut source = state
                     .lock()
                     .unwrap_or_else(|poisoned| poisoned.into_inner());
-                if source.kind() != kind {
-                    source.set_kind(kind);
-                }
-                source.set_tone(tone);
                 let target = if enabled { volume } else { 0.0 };
                 if (source.target_gain() - target).abs() > f32::EPSILON {
                     source.fade_to(target, DEFAULT_FADE_MS);

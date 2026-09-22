@@ -36,10 +36,11 @@ the whole product, and it should not cost anything.
 - **A chime at each boundary**, synthesised rather than sampled: a soft bell,
   a singing bowl or a wooden block. Focus ends on a lower note than a break,
   so you can tell them apart without looking.
-- **Deep noise, rain, or a low drone** while you work, with volume and a tone
-  control that runs from muffled and distant to fully open. Every sound is
-  generated as it plays, so none of it loops. It fades in and out, and stops
-  on its own when the session does.
+- **A deep, low rumble** while you work, generated as it plays so it never
+  loops. It fades in and out, and stops on its own when the session does.
+  There used to be a choice of sounds; white and pink noise were too harsh,
+  and synthesised rain and a drone were worse than nothing. This is the one
+  that survived being used.
 - **Breaks that start themselves** — and focus that does not, unless you ask.
 - **Light and dark**, following the system or pinned either way.
 
@@ -121,7 +122,7 @@ npm run build               # typecheck and bundle the UI
 ```
 crates/lockin-core     no system dependencies, all the logic worth testing
   timer.rs             the phase state machine, driven by an injected clock
-  noise.rs             the ambient generators and the fade envelope
+  noise.rs             the ambient rumble and its fade envelope
   chime.rs             additive synthesis of the boundary chimes
   settings.rs          the settings file, its clamping and its migrations
 src-tauri              the desktop app
