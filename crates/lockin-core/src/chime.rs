@@ -49,35 +49,43 @@ impl ChimeVoice {
     fn partials(self) -> &'static [(f32, f32, f32, f32)] {
         match self {
             ChimeVoice::Bell => &[
-                (1.00, 1.00, 3.20, 0.0),
-                (2.00, 0.50, 2.30, 0.0),
-                (2.98, 0.32, 1.60, 0.0),
-                (4.03, 0.18, 1.10, 0.0),
-                (5.43, 0.09, 0.80, 0.0),
-                (6.79, 0.05, 0.55, 0.0),
+                (1.00, 1.00, 0.52, 0.0),
+                (2.00, 0.50, 0.38, 0.0),
+                (2.98, 0.32, 0.27, 0.0),
+                (4.03, 0.18, 0.19, 0.0),
+                (5.43, 0.09, 0.14, 0.0),
+                (6.79, 0.05, 0.10, 0.0),
             ],
             ChimeVoice::Bowl => &[
-                (1.00, 1.00, 6.00, 0.0),
+                (1.00, 1.00, 0.92, 0.0),
                 // The detuned twin beats slowly against its partner, which is
                 // what gives a real bowl its breathing quality.
-                (1.00, 0.85, 6.00, 0.7),
-                (2.72, 0.42, 4.00, 0.0),
-                (2.72, 0.30, 4.00, 1.1),
-                (5.38, 0.14, 2.40, 0.0),
+                (1.00, 0.85, 0.92, 0.7),
+                (2.72, 0.42, 0.62, 0.0),
+                (2.72, 0.30, 0.62, 1.1),
+                (5.38, 0.14, 0.38, 0.0),
             ],
             ChimeVoice::Wood => &[
-                (1.00, 1.00, 0.34, 0.0),
-                (3.12, 0.44, 0.20, 0.0),
-                (6.71, 0.16, 0.12, 0.0),
+                (1.00, 1.00, 0.27, 0.0),
+                (3.12, 0.44, 0.16, 0.0),
+                (6.71, 0.16, 0.09, 0.0),
             ],
         }
     }
 
-    fn longest_decay(self) -> f32 {
-        self.partials()
-            .iter()
-            .map(|(_, _, decay, _)| *decay)
-            .fold(0.0, f32::max)
+    /// How long one strike lasts, tail included.
+    ///
+    /// These are notification sounds, not instrument samples. A real singing
+    /// bowl rings for half a minute; waiting that long to get back to work is
+    /// worse than a shorter tail that is obviously deliberate. Each voice's
+    /// partials are tuned to have decayed to near nothing by this point, so
+    /// the sound ends rather than being cut off.
+    fn duration_secs(self) -> f32 {
+        match self {
+            ChimeVoice::Wood => 1.0,
+            ChimeVoice::Bell => 1.9,
+            ChimeVoice::Bowl => 3.3,
+        }
     }
 }
 
@@ -102,9 +110,7 @@ pub fn render(voice: ChimeVoice, sample_rate: u32, frequency: f32, gain: f32) ->
     let frequency = frequency.clamp(40.0, 4_000.0);
     let rate = sample_rate as f32;
 
-    // Run each partial until it has decayed well below audibility.
-    let duration_secs = voice.longest_decay() * 1.6 + RELEASE_MS / 1000.0;
-    let frames = (duration_secs * rate) as usize;
+    let frames = (voice.duration_secs() * rate) as usize;
     let attack_frames = (ATTACK_MS / 1000.0 * rate).max(1.0);
     let release_frames = (RELEASE_MS / 1000.0 * rate).max(1.0);
     let nyquist = rate / 2.0;
@@ -213,11 +219,45 @@ mod tests {
         }
     }
 
+    fn length_secs(voice: ChimeVoice) -> f32 {
+        render(voice, RATE, 440.0, 1.0).len() as f32 / 2.0 / RATE as f32
+    }
+
     #[test]
-    fn wood_is_much_shorter_than_bowl() {
-        let wood = render(ChimeVoice::Wood, RATE, 440.0, 1.0);
-        let bowl = render(ChimeVoice::Bowl, RATE, 440.0, 1.0);
-        assert!(wood.len() * 4 < bowl.len());
+    fn each_voice_lasts_as_long_as_it_says() {
+        for (voice, expected) in [
+            (ChimeVoice::Wood, 1.0),
+            (ChimeVoice::Bell, 1.9),
+            (ChimeVoice::Bowl, 3.3),
+        ] {
+            let measured = length_secs(voice);
+            assert!(
+                (measured - expected).abs() < 0.05,
+                "{voice:?} ran {measured}s, expected about {expected}s"
+            );
+        }
+    }
+
+    #[test]
+    fn the_three_voices_run_short_to_long() {
+        assert!(length_secs(ChimeVoice::Wood) < length_secs(ChimeVoice::Bell));
+        assert!(length_secs(ChimeVoice::Bell) < length_secs(ChimeVoice::Bowl));
+    }
+
+    #[test]
+    fn every_voice_fades_out_rather_than_being_cut_off() {
+        // The release ramp hides a click, but it cannot hide a chime that is
+        // still at half volume when the buffer ends. The partials have to have
+        // decayed on their own by then, or the sound is audibly truncated.
+        for voice in ChimeVoice::all() {
+            let buf = render(voice, RATE, 440.0, 1.0);
+            let last_fifth = &buf[buf.len() / 5 * 4..];
+            let tail = peak(last_fifth);
+            assert!(
+                tail < 0.08,
+                "{voice:?} was still at {tail} through its final fifth"
+            );
+        }
     }
 
     #[test]
