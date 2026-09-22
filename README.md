@@ -50,16 +50,15 @@ link in Settings. See [PRIVACY.md](PRIVACY.md).
 
 ## Install
 
-> [!IMPORTANT]
-> Version 0.1 is early. Only Apple silicon Macs have been run by a human so
-> far; everything else in this table is honest about what has and has not
-> been tried. Please report what breaks.
+> [!NOTE]
+> Version 0.1 is early, and this table is honest about what has actually
+> been run rather than what merely compiles. Please report what breaks.
 
 | Platform | Status |
 | --- | --- |
-| macOS, Apple silicon | **Tested** — runs, keeps time, chimes |
+| macOS, Apple silicon | **Tested** |
+| Windows 11 | **Tested** |
 | macOS, Intel | Builds in CI, never launched by anyone |
-| Windows 11 | Builds in CI, never launched by anyone |
 | Linux | Builds from source |
 | Android | **Not started.** No project, no APK, nothing to install |
 | iOS | **Not started.** Same |
@@ -160,7 +159,9 @@ no sample licence for anyone to trip over when they fork this.
 
 ## Roadmap
 
-1. Test 0.1 on real macOS and Windows machines and fix what falls out.
+1. A live countdown in the Windows tray. On macOS the remaining time sits
+   next to the clock; Tauri's tray title is macOS-only, so on Windows it is
+   in the tooltip instead.
 2. Android, through F-Droid first — the only store route that costs nothing
    and the natural home for an app like this.
 3. iOS, which needs an Apple Developer membership.
