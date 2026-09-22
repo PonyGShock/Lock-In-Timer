@@ -17,7 +17,7 @@
         "label": "main",
         "title": "Lock In",
         "width": 356,
-        "height": 580,
+        "height": 624,
         "resizable": false,
         "maximizable": false,
         "minimizable": false,
@@ -42,7 +42,7 @@
     "targets": "all",
     "category": "Productivity",
     "shortDescription": "A calm pomodoro timer for the menu bar",
-    "longDescription": "Lock In is a free and open source pomodoro timer that lives in the menu bar. Several timer lengths, a synthesised chime at each boundary and optional white, pink or brown noise while you work. No account, no paywall, no tracking.",
+    "longDescription": "Lock In is a free and open source focus timer that lives in the menu bar. Several timer lengths, a synthesised chime at each boundary, and optional deep noise, rain or a low drone while you work. No account, no paywall, no tracking.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

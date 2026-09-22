@@ -1,4 +1,4 @@
 First release.
 
-A focus timer with five presets, synthesised chimes, and white, pink or brown
-noise while you work.
+A focus timer with five presets, synthesised chimes, and a choice of deep
+noise, rain or a low drone while you work.

@@ -58,7 +58,7 @@ impl Default for Settings {
             chime_volume: 0.7,
 
             noise_enabled: false,
-            noise_kind: NoiseKind::Brown,
+            noise_kind: NoiseKind::Deep,
             noise_volume: 0.35,
             noise_tone: 0.55,
             noise_during_breaks: false,
@@ -191,10 +191,10 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("lockin-partial-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("settings.json");
-        fs::write(&path, r#"{"noiseKind":"pink","chimeVolume":0.25}"#).unwrap();
+        fs::write(&path, r#"{"noiseKind":"rain","chimeVolume":0.25}"#).unwrap();
 
         let settings = Settings::load(&path);
-        assert_eq!(settings.noise_kind, NoiseKind::Pink);
+        assert_eq!(settings.noise_kind, NoiseKind::Rain);
         assert_eq!(settings.chime_volume, 0.25);
         assert_eq!(settings.preset_id, default_preset().id);
 
@@ -219,7 +219,7 @@ mod tests {
 
         let original = Settings {
             noise_enabled: true,
-            noise_kind: NoiseKind::Pink,
+            noise_kind: NoiseKind::Rain,
             chime_voice: ChimeVoice::Bowl,
             preset_id: "deep".to_string(),
             ..Settings::default()

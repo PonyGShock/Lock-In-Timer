@@ -156,7 +156,7 @@ fn run(rx: mpsc::Receiver<Command>) {
         .map(|d| d.as_nanos() as u64)
         .unwrap_or(0x5EED);
     let state = Arc::new(Mutex::new(NoiseSource::new(
-        NoiseKind::Brown,
+        NoiseKind::Deep,
         SAMPLE_RATE,
         seed,
     )));

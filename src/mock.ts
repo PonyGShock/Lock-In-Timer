@@ -33,7 +33,7 @@ let settings: Settings = {
   chimeVoice: "bell",
   chimeVolume: 0.7,
   noiseEnabled: false,
-  noiseKind: "brown",
+  noiseKind: "deep",
   noiseVolume: 0.35,
   noiseTone: 0.55,
   noiseDuringBreaks: false,

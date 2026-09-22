@@ -3,7 +3,7 @@
 
 export type Phase = "focus" | "shortBreak" | "longBreak";
 export type RunState = "idle" | "running" | "paused";
-export type NoiseKind = "white" | "pink" | "brown";
+export type NoiseKind = "deep" | "rain" | "hum";
 export type ChimeVoice = "bell" | "bowl" | "wood";
 export type Theme = "system" | "light" | "dark";
 
@@ -66,9 +66,9 @@ export interface AppState {
 }
 
 export const NOISE_KINDS: { id: NoiseKind; label: string; hint: string }[] = [
-  { id: "brown", label: "Brown", hint: "Deep and rumbling, like distant surf" },
-  { id: "pink", label: "Pink", hint: "Soft and even, close to rain on a window" },
-  { id: "white", label: "White", hint: "Bright and full, the classic masking hiss" },
+  { id: "deep", label: "Deep", hint: "Low and rumbling, like distant surf" },
+  { id: "rain", label: "Rain", hint: "Steady rainfall on a window" },
+  { id: "hum", label: "Hum", hint: "A low drone with a slow pulse" },
 ];
 
 export const CHIME_VOICES: { id: ChimeVoice; label: string }[] = [

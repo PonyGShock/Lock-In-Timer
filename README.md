@@ -13,7 +13,7 @@ no telemetry. Every feature is in the app the moment you install it.
 
 <div align="center">
 <img src="docs/screenshots/idle-light.png" width="240" alt="Idle timer" />
-<img src="docs/screenshots/running-light.png" width="240" alt="Running focus session with brown noise" />
+<img src="docs/screenshots/running-light.png" width="240" alt="Running focus session with ambient sound" />
 <img src="docs/screenshots/break-light.png" width="240" alt="Short break" />
 </div>
 
@@ -36,9 +36,10 @@ the whole product, and it should not cost anything.
 - **A chime at each boundary**, synthesised rather than sampled: a soft bell,
   a singing bowl or a wooden block. Focus ends on a lower note than a break,
   so you can tell them apart without looking.
-- **White, pink or brown noise** while you work, with volume and a tone
-  control that runs from muffled and distant to fully open. It fades in and
-  out, never loops, and stops on its own when the session does.
+- **Deep noise, rain, or a low drone** while you work, with volume and a tone
+  control that runs from muffled and distant to fully open. Every sound is
+  generated as it plays, so none of it loops. It fades in and out, and stops
+  on its own when the session does.
 - **Breaks that start themselves** — and focus that does not, unless you ask.
 - **Light and dark**, following the system or pinned either way.
 
@@ -120,7 +121,7 @@ npm run build               # typecheck and bundle the UI
 ```
 crates/lockin-core     no system dependencies, all the logic worth testing
   timer.rs             the phase state machine, driven by an injected clock
-  noise.rs             white / pink / brown generators and the fade envelope
+  noise.rs             the ambient generators and the fade envelope
   chime.rs             additive synthesis of the boundary chimes
   settings.rs          the settings file, its clamping and its migrations
 src-tauri              the desktop app
