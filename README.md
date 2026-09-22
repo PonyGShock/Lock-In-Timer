@@ -51,16 +51,27 @@ link in Settings. See [PRIVACY.md](PRIVACY.md).
 ## Install
 
 > [!IMPORTANT]
-> Version 0.1 is **untested on real hardware.** The logic is covered by tests
-> and both desktop builds pass CI, but nobody has yet run it on a physical Mac
-> or PC. Treat the first release as a beta and please report what breaks.
+> Version 0.1 is early. Only Apple silicon Macs have been run by a human so
+> far; everything else in this table is honest about what has and has not
+> been tried. Please report what breaks.
 
 | Platform | Status |
 | --- | --- |
-| macOS 10.15+ | Builds and bundles, needs testing |
-| Windows 11 | Builds in CI, needs testing |
+| macOS, Apple silicon | **Tested** — runs, keeps time, chimes |
+| macOS, Intel | Builds in CI, never launched by anyone |
+| Windows 11 | Builds in CI, never launched by anyone |
 | Linux | Builds from source |
-| Android / iOS | Planned — see [DISTRIBUTION.md](docs/DISTRIBUTION.md) |
+| Android | **Not started.** No project, no APK, nothing to install |
+| iOS | **Not started.** Same |
+
+On Android and iOS the Rust code is structured for a port — the tray, the
+login item and the popover positioning are behind `#[cfg(desktop)]`, and the
+interface has a phone layout — but no mobile project has ever been generated
+or built. Getting there is real work, not a build command, because a phone
+suspends your process: the timer has to schedule its end rather than count
+towards it, and background audio needs a foreground service on Android and
+the right background mode on iOS. See
+[DISTRIBUTION.md](docs/DISTRIBUTION.md).
 
 Download from [Releases](../../releases). The icon appears in the menu bar or
 system tray; on macOS there is deliberately no dock icon.
