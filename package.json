@@ -1,6 +1,6 @@
 {
   "name": "lockin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "A calm pomodoro timer for the menu bar",
@@ -12,7 +12,8 @@
     "icons": "node scripts/icons.mjs",
     "tauri": "tauri",
     "app": "tauri dev",
-    "app:build": "tauri build"
+    "app:build": "tauri build",
+    "site": "node scripts/site.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

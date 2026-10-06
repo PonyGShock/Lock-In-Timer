@@ -12,3 +12,6 @@ src-tauri/gen/
 .interact.mjs
 *.log
 .DS_Store
+
+# The assembled website (npm run site)
+_site/

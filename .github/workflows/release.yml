@@ -48,7 +48,8 @@ jobs:
           releaseName: Lock In ${{ github.ref_name }}
           releaseDraft: true
           releaseBody: |
-            See [CHANGELOG](https://github.com/PonyGShock/Lock-In-Timer/commits/${{ github.ref_name }}).
+            What changed: [CHANGELOG.md](https://github.com/PonyGShock/Lock-In-Timer/blob/${{ github.ref_name }}/CHANGELOG.md).
+            More about Lock In: https://ponygshock.github.io/Lock-In-Timer/
 
             **macOS:** these builds are unsigned, so macOS will claim the app
             is damaged. It is not — it is just unsigned. Run

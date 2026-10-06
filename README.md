@@ -9,12 +9,21 @@
 Free and open source. No account, no subscription, no paywall, no adverts,
 no telemetry. Every feature is in the app the moment you install it.
 
+[**Website**](https://ponygshock.github.io/Lock-In-Timer/) ·
+[**Download**](https://github.com/PonyGShock/Lock-In-Timer/releases/latest) ·
+[Report a bug](https://github.com/PonyGShock/Lock-In-Timer/issues/new/choose)
+
+[![CI](https://github.com/PonyGShock/Lock-In-Timer/actions/workflows/ci.yml/badge.svg)](https://github.com/PonyGShock/Lock-In-Timer/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/PonyGShock/Lock-In-Timer?color=c08552&label=release)](https://github.com/PonyGShock/Lock-In-Timer/releases/latest)
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-7d9476)](LICENSE)
+
 </div>
 
 <div align="center">
 <img src="docs/screenshots/idle-light.png" width="240" alt="Idle timer" />
 <img src="docs/screenshots/running-light.png" width="240" alt="Running focus session with ambient sound" />
 <img src="docs/screenshots/break-light.png" width="240" alt="Short break" />
+<img src="docs/screenshots/running-dark.png" width="240" alt="Focus session in dark mode" />
 </div>
 
 ## Why
@@ -31,8 +40,10 @@ the whole product, and it should not cost anything.
 
 - **Five timer lengths.** Espresso (15/3), Classic (25/5), Deep (50/10),
   Flow (90/20), and a Custom one you set yourself.
-- **A countdown in the menu bar**, shown only while a session is actually
-  running. An idle timer is a quiet one.
+- **A menu bar icon that fills like a cup** as the session runs — a cup seen
+  from above, its crema a progress ring. On a Mac the countdown also sits
+  beside the clock, but only while a session is actually running. An idle
+  timer is a quiet one.
 - **A chime at each boundary**, synthesised rather than sampled: a soft bell,
   a singing bowl or a wooden block. Focus ends on a lower note than a break,
   so you can tell them apart without looking.
@@ -51,8 +62,8 @@ link in Settings. See [PRIVACY.md](PRIVACY.md).
 ## Install
 
 > [!NOTE]
-> Version 0.1 is early, and this table is honest about what has actually
-> been run rather than what merely compiles. Please report what breaks.
+> Lock In is young, and this table is honest about what has actually been
+> run rather than what merely compiles. Please report what breaks.
 
 | Platform | Status |
 | --- | --- |
@@ -168,9 +179,9 @@ session instead of restarting it.
 
 ## Roadmap
 
-1. A live countdown in the Windows tray. On macOS the remaining time sits
-   next to the clock; Tauri's tray title is macOS-only, so on Windows it is
-   in the tooltip instead.
+1. Numbers in the Windows tray. The tray icon already fills as the session
+   runs and the time is in its tooltip, but Tauri's tray title — which puts
+   the countdown beside the clock on a Mac — is macOS-only.
 2. Android, through F-Droid first — the only store route that costs nothing
    and the natural home for an app like this.
 3. iOS, which needs an Apple Developer membership.

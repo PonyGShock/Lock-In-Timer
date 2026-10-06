@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lock In — a calm, free pomodoro timer for your menu bar</title>
+    <meta
+      name="description"
+      content="Lock In is a free and open source pomodoro timer for the macOS menu bar and the Windows system tray. No account, no subscription, no tracking. Gentle chimes and a deep focus rumble included."
+    />
+    <meta name="theme-color" content="#fbf7f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1c1713" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon-180.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Lock In — a calm, free pomodoro timer" />
+    <meta
+      property="og:description"
+      content="A focus timer for your menu bar with everything you really need and nothing to pay for. Free and open source, forever."
+    />
+    <meta property="og:image" content="https://ponygshock.github.io/Lock-In-Timer/social.png" />
+    <meta property="og:url" content="https://ponygshock.github.io/Lock-In-Timer/" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="preload" href="fonts/fraunces-soft.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="style.css" />
+    <script src="main.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="nav">
+      <div class="wrap nav__inner">
+        <a class="brand" href="./" aria-label="Lock In, home">
+          <img src="icon.svg" width="30" height="30" alt="" />
+          <span>Lock In</span>
+        </a>
+        <nav aria-label="Main">
+          <a href="#features">Features</a>
+          <a href="#free">Why free</a>
+          <a href="#faq">FAQ</a>
+          <a class="nav__github" href="https://github.com/PonyGShock/Lock-In-Timer">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+            GitHub
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- Hero ----------------------------------------------------------- -->
+      <section class="hero">
+        <div class="wrap hero__inner">
+          <div class="hero__copy">
+            <p class="eyebrow">Free &amp; open source pomodoro timer</p>
+            <h1>Pour a coffee.<br />Lock in.</h1>
+            <p class="lede">
+              A calm focus timer that lives in your menu bar. Everything a pomodoro timer
+              really needs — and nothing to pay for, sign up to or be tracked by.
+            </p>
+
+            <div class="cta" data-download>
+              <a class="button button--primary" href="https://github.com/PonyGShock/Lock-In-Timer/releases" data-primary>
+                <span data-primary-label>Download Lock In</span>
+              </a>
+              <a class="button button--quiet" href="#download">All downloads</a>
+            </div>
+            <p class="fineprint" data-fineprint>
+              For macOS and Windows · Free forever · GPL-3.0
+            </p>
+          </div>
+
+          <div class="hero__shot" aria-hidden="true">
+            <div class="menubar">
+              <span class="menubar__apple"></span>
+              <span class="menubar__spacer"></span>
+              <span class="menubar__item menubar__item--active">
+                <svg width="16" height="16" viewBox="0 0 24 24">
+                  <circle cx="10" cy="12" r="6.6" fill="none" stroke="currentColor" stroke-width="1.9" />
+                  <path d="M17 12h4.4" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" />
+                  <circle cx="10" cy="12" r="3.3" fill="none" stroke="currentColor" stroke-opacity=".28" stroke-width="2.3" />
+                  <path d="M10 8.7a3.3 3.3 0 0 1 3.3 3.3" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" />
+                </svg>
+                18:41
+              </span>
+              <span class="menubar__item">Tue 9:41</span>
+            </div>
+            <picture>
+              <source srcset="screenshots/running-dark.png" media="(prefers-color-scheme: dark)" />
+              <img
+                class="hero__app"
+                src="screenshots/running-light.png"
+                width="356"
+                height="580"
+                alt=""
+              />
+            </picture>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features -------------------------------------------------------- -->
+      <section id="features" class="section">
+        <div class="wrap">
+          <h2 class="section__title">Everything you need.<br />Nothing you don’t.</h2>
+          <p class="section__lede">
+            No streaks to protect, no charts to admire, no account to manage. A timer, a
+            gentle sound, and the rest of your attention back.
+          </p>
+
+          <ul class="features">
+            <li class="feature">
+              <span class="feature__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1.5" /><circle cx="16.5" cy="6" r="1" class="fill" /><path d="M8 13h8M8 17h5" /></svg>
+              </span>
+              <h3>Lives in your menu bar</h3>
+              <p>
+                One click opens it, a click anywhere else puts it away. The icon fills like a
+                cup as the session runs, and the countdown sits beside the clock on a Mac.
+              </p>
+            </li>
+            <li class="feature">
+              <span class="feature__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 7.5V12l3 2" /></svg>
+              </span>
+              <h3>Five ways to brew a session</h3>
+              <p>
+                Espresso 15/3, Classic 25/5, Deep 50/10, Flow 90/20, or your own Custom
+                blend. Rounds and a long break are built in.
+              </p>
+            </li>
+            <li class="feature">
+              <span class="feature__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 15c0-4 2.7-8 6-8s6 4 6 8" /><path d="M4 15h16" /><path d="M10.5 18.5a1.5 1.5 0 0 0 3 0" /></svg>
+              </span>
+              <h3>A chime, not an alarm</h3>
+              <p>
+                A soft bell, a singing bowl or a wooden block, synthesised as it plays. Focus
+                ends on a lower note than a break, so you know which without looking.
+              </p>
+            </li>
+            <li class="feature">
+              <span class="feature__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 11v2M8 8.5v7M12 5.5v13M16 8.5v7M20 11v2" /></svg>
+              </span>
+              <h3>A low rumble to sink into</h3>
+              <p>
+                Optional deep brown noise, like distant surf. Generated live so it never
+                loops, and it fades out by itself when the session ends.
+              </p>
+            </li>
+            <li class="feature">
+              <span class="feature__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 1 2 4.9" /><path d="M5 17v-4h4" /></svg>
+              </span>
+              <h3>Breaks that start themselves</h3>
+              <p>
+                Focus ends, the break begins. The next focus waits for you unless you ask it
+                not to. Space starts and pauses; Esc puts the window away.
+              </p>
+            </li>
+            <li class="feature">
+              <span class="feature__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></svg>
+              </span>
+              <h3>Private by design</h3>
+              <p>
+                No account, no analytics, no network code at all. Your settings live in one
+                small file on your computer and go nowhere else.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Gallery --------------------------------------------------------- -->
+      <section class="gallery" aria-label="Screenshots">
+        <div class="wrap gallery__row">
+          <figure>
+            <img src="screenshots/idle-light.png" width="356" height="580" loading="lazy" alt="Lock In, ready to start a 25 minute focus session" />
+            <figcaption>Ready when you are</figcaption>
+          </figure>
+          <figure>
+            <img src="screenshots/break-light.png" width="356" height="580" loading="lazy" alt="A short break, coloured sage green" />
+            <figcaption>Breaks turn sage</figcaption>
+          </figure>
+          <figure>
+            <img src="screenshots/running-dark.png" width="356" height="580" loading="lazy" alt="Lock In in dark mode during a focus session" />
+            <figcaption>Dark roast, too</figcaption>
+          </figure>
+          <figure>
+            <img src="screenshots/settings-light.png" width="356" height="580" loading="lazy" alt="The settings screen" />
+            <figcaption>One quiet settings page</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- Free ------------------------------------------------------------ -->
+      <section id="free" class="section section--sunk">
+        <div class="wrap free">
+          <div class="free__copy">
+            <h2 class="section__title">Free. Not “free trial”.</h2>
+            <p>
+              A focus timer is some of the simplest software there is, yet most of them want
+              a subscription, an account, or a few euros to unlock the sound you actually
+              like. Lock In has no paid tier to unlock, because there is nothing locked.
+            </p>
+            <p>
+              It is open source under the GPL, so it stays that way: anyone can read the
+              code, build it themselves, and keep it going.
+            </p>
+          </div>
+
+          <table class="compare">
+            <caption class="visually-hidden">Lock In compared with a typical paid timer</caption>
+            <thead>
+              <tr>
+                <th scope="col"></th>
+                <th scope="col">Lock In</th>
+                <th scope="col">Typical paid timer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Price</th><td class="yes">€0, forever</td><td>€5–10, or a subscription</td></tr>
+              <tr><th scope="row">Account</th><td class="yes">None</td><td>Often required</td></tr>
+              <tr><th scope="row">Ambient sound</th><td class="yes">Included</td><td>Often “Pro”</td></tr>
+              <tr><th scope="row">Tracking</th><td class="yes">None</td><td>Usually analytics</td></tr>
+              <tr><th scope="row">Source code</th><td class="yes">Open</td><td>Closed</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Download -------------------------------------------------------- -->
+      <section id="download" class="section">
+        <div class="wrap">
+          <h2 class="section__title">Download</h2>
+          <p class="section__lede" data-release-line>
+            The latest version is on GitHub, built straight from the source you can read.
+          </p>
+
+          <div class="downloads">
+            <div class="download">
+              <h3>macOS</h3>
+              <p class="download__meta">macOS 10.15 or later</p>
+              <a class="button button--primary" data-asset="aarch64.dmg" href="https://github.com/PonyGShock/Lock-In-Timer/releases">Apple silicon</a>
+              <a class="button button--quiet" data-asset="x64.dmg" href="https://github.com/PonyGShock/Lock-In-Timer/releases">Intel</a>
+              <p class="download__hint">Apple silicon is any Mac with an M1 chip or newer. Not sure? Apple menu → About This Mac.</p>
+              <details>
+                <summary>First launch on a Mac</summary>
+                <p>
+                  The app isn’t signed with a paid Apple certificate, so macOS may say it is
+                  “damaged”. It isn’t. Drag Lock In to Applications, then run this once in
+                  Terminal:
+                </p>
+                <pre><code>xattr -cr "/Applications/Lock In.app"</code></pre>
+                <p>Lock In then appears in the menu bar. There is deliberately no Dock icon.</p>
+              </details>
+            </div>
+
+            <div class="download">
+              <h3>Windows</h3>
+              <p class="download__meta">Windows 10 and 11, 64-bit</p>
+              <a class="button button--primary" data-asset="x64-setup.exe" href="https://github.com/PonyGShock/Lock-In-Timer/releases">Installer (.exe)</a>
+              <a class="button button--quiet" data-asset="x64_en-US.msi" href="https://github.com/PonyGShock/Lock-In-Timer/releases">MSI package</a>
+              <details>
+                <summary>First launch on Windows</summary>
+                <p>
+                  SmartScreen doesn’t recognise unsigned apps yet. Choose
+                  <strong>More info</strong>, then <strong>Run anyway</strong>. Lock In appears
+                  in the system tray — look under the <strong>^</strong> arrow and drag it onto
+                  the taskbar to keep it in view.
+                </p>
+              </details>
+            </div>
+
+            <div class="download download--soon">
+              <h3>iPhone &amp; Android</h3>
+              <p class="download__meta">Not yet</p>
+              <p>
+                Phones need real porting work — a phone suspends apps, so the timer has to be
+                rebuilt around that. It’s on the roadmap, and help is welcome.
+              </p>
+              <a class="button button--quiet" href="https://github.com/PonyGShock/Lock-In-Timer/blob/main/docs/DISTRIBUTION.md">Read the plan</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ ------------------------------------------------------------- -->
+      <section id="faq" class="section section--sunk">
+        <div class="wrap faq">
+          <h2 class="section__title">Questions</h2>
+
+          <details>
+            <summary>Is it really free? What’s the catch?</summary>
+            <p>
+              No catch. There is no paid version, no in-app purchase and no advert. Lock In is
+              a hobby project released under the GPL-3.0 licence, which also guarantees that the
+              code stays open.
+            </p>
+          </details>
+          <details>
+            <summary>Why does my computer warn me when I open it?</summary>
+            <p>
+              Apple and Microsoft charge developers for the certificates that silence those
+              warnings. Lock In costs nothing, so it isn’t signed yet. The app is built in
+              public by GitHub Actions from the code in the repository, and you can build it
+              yourself in about five minutes if you’d rather not take that on trust.
+            </p>
+          </details>
+          <details>
+            <summary>Does it collect any data?</summary>
+            <p>
+              No. The app has no network code at all. Its only outbound action is opening the
+              project page in your browser if you tap the link in Settings. This website has
+              no analytics or cookies either; it only asks GitHub which version is newest.
+            </p>
+          </details>
+          <details>
+            <summary>What is the pomodoro technique?</summary>
+            <p>
+              Work in short, focused sessions — classically 25 minutes — with a short break
+              after each and a longer one after four. Lock In handles the counting and the
+              switching, so all you have to do is start.
+            </p>
+          </details>
+          <details>
+            <summary>Something broke, or I have an idea.</summary>
+            <p>
+              Please
+              <a href="https://github.com/PonyGShock/Lock-In-Timer/issues/new/choose">open an issue</a>.
+              Bug reports from real machines are the most useful thing anyone can contribute.
+            </p>
+          </details>
+          <details>
+            <summary>Can I help?</summary>
+            <p>
+              Yes! Star the repository, tell a friend who’d like it, report bugs, or send a
+              pull request — the
+              <a href="https://github.com/PonyGShock/Lock-In-Timer/blob/main/CONTRIBUTING.md">contributing guide</a>
+              explains how to run the app from source.
+            </p>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <span class="brand brand--small">
+          <img src="icon.svg" width="22" height="22" alt="" />
+          Lock In
+        </span>
+        <p>
+          Free and open source under
+          <a href="https://github.com/PonyGShock/Lock-In-Timer/blob/main/LICENSE">GPL-3.0</a>.
+          Made with coffee by
+          <a href="https://github.com/PonyGShock">PonyGShock</a> and
+          <a href="https://github.com/PonyGShock/Lock-In-Timer/graphs/contributors">contributors</a>.
+        </p>
+        <p>
+          <a href="https://github.com/PonyGShock/Lock-In-Timer/blob/main/PRIVACY.md">Privacy</a> ·
+          <a href="https://github.com/PonyGShock/Lock-In-Timer/blob/main/SECURITY.md">Security</a> ·
+          <a href="https://github.com/PonyGShock/Lock-In-Timer/releases">Releases</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

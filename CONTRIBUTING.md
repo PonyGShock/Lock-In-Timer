@@ -42,6 +42,18 @@ If you change something the backend owns — a new command, a new settings
 field — update `src/mock.ts` too, or the browser view quietly drifts away from
 the real app.
 
+### Working on the website
+
+The site at ponygshock.github.io/Lock-In-Timer is plain HTML and CSS in
+`site/`, published by the Website workflow on every push to `main`:
+
+```sh
+npm run site                         # assembles _site/ with the icon and screenshots
+npx vite preview --outDir _site      # http://localhost:4173
+```
+
+It deliberately has no build step, no framework and no tracking.
+
 ## Before you open a pull request
 
 ```sh

@@ -2207,7 +2207,7 @@ dependencies = [
 
 [[package]]
 name = "lockin"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "lockin-core",
@@ -2224,7 +2224,7 @@ dependencies = [
 
 [[package]]
 name = "lockin-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "serde",

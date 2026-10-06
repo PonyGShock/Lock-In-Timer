@@ -1,7 +1,8 @@
 # Privacy policy
 
-**Last updated:** 21 September 2026
-**Applies to:** the Lock In app on macOS, Windows, Android and iOS.
+**Last updated:** 6 October 2026
+**Applies to:** the Lock In app on macOS, Windows, Android and iOS, and its
+website.
 
 ## The short version
 
@@ -16,8 +17,8 @@ One file, on your own device: `settings.json`, in the standard configuration
 directory for your platform. It contains:
 
 - your chosen timer preset and any custom lengths you set
-- your sound preferences (chime on or off, which voice, volume; noise type,
-  volume and tone)
+- your sound preferences (chime on or off, which voice and how loud; noise on
+  or off, how loud, and whether it plays through breaks)
 - your app preferences (theme, notifications, menu bar countdown, open at
   login)
 - the number of focus sessions you have finished today, and today's date, so
@@ -51,6 +52,14 @@ involved.
 
 If you download the app from an app store, that store will have its own record
 of the download under its own privacy policy. That is between you and them.
+
+## The website
+
+ponygshock.github.io/Lock-In-Timer has no cookies, no analytics and no
+third-party fonts or scripts. To show the newest version and link straight to
+its downloads, your browser asks GitHub's public API which release is latest.
+The site is hosted by GitHub Pages, which keeps its own server logs under
+[GitHub's privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
 
 ## Children
 
