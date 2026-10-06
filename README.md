@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="app-icon.png" width="112" alt="Lock In" />
+<img src="brand/icon.svg" width="112" alt="Lock In" />
 
 # Lock In
 
@@ -99,7 +99,7 @@ macOS also `xcode-select --install`; on Linux also
 git clone https://github.com/PonyGShock/Lock-In-Timer.git
 cd Lock-In-Timer
 npm install
-npm run icons      # renders the icon set from app-icon.png
+npm run icons      # renders the icon set from brand/icon.svg
 npm run app        # development build
 npm run app:build  # release build
 ```

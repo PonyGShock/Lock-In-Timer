@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- The same art as brand/icon.svg, on Apple's grid: an 824px tile with room
+       for its shadow, so it sits at the same size as every other Mac icon. -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#83573D"/>
+      <stop offset="1" stop-color="#4A3022"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.32" r="0.62">
+      <stop offset="0" stop-color="#F0C08C" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#F0C08C" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="saucer" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8EFE3"/>
+      <stop offset="1" stop-color="#E4D0B8"/>
+    </linearGradient>
+    <linearGradient id="cup" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFCF7"/>
+      <stop offset="1" stop-color="#F0E2D0"/>
+    </linearGradient>
+    <radialGradient id="coffee" cx="0.4" cy="0.34" r="0.78">
+      <stop offset="0" stop-color="#6E452D"/>
+      <stop offset="1" stop-color="#3A2216"/>
+    </radialGradient>
+    <linearGradient id="crema" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2BE86"/>
+      <stop offset="1" stop-color="#D99A5E"/>
+    </linearGradient>
+    <filter id="drop" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#1E120B" flood-opacity="0.45"/>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#5A3A26" flood-opacity="0.28"/>
+    </filter>
+    <filter id="tileShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <g transform="translate(100 100) scale(0.8046875)">
+    <rect width="1024" height="1024" rx="230" fill="url(#tile)" filter="url(#tileShadow)"/>
+    <rect width="1024" height="1024" rx="230" fill="url(#glow)"/>
+
+    <!-- saucer -->
+    <circle cx="490" cy="522" r="318" fill="url(#saucer)" filter="url(#drop)"/>
+    <circle cx="490" cy="522" r="250" fill="none" stroke="#C4A688" stroke-opacity="0.4" stroke-width="5"/>
+
+    <!-- handle, then the cup over it -->
+    <g filter="url(#soft)">
+      <rect x="640" y="474" width="210" height="96" rx="48" fill="url(#cup)"/>
+      <circle cx="490" cy="522" r="214" fill="url(#cup)"/>
+    </g>
+
+    <!-- coffee, with a shadow where it meets the rim -->
+    <circle cx="490" cy="522" r="172" fill="url(#coffee)"/>
+    <circle cx="490" cy="522" r="169" fill="none" stroke="#24140C" stroke-opacity="0.35" stroke-width="6"/>
+
+    <!-- crema: a timer ring, three quarters of the way through a session -->
+    <circle cx="490" cy="522" r="120" fill="none" stroke="#E8AE74" stroke-opacity="0.16" stroke-width="36"/>
+    <circle cx="490" cy="522" r="120" fill="none" stroke="url(#crema)" stroke-width="36" stroke-linecap="round"
+            stroke-dasharray="565.5 1000" transform="rotate(-90 490 522)"/>
+  </g>
+</svg>

@@ -7,6 +7,7 @@
 //! toolkit present. The desktop app is a thin shell around it.
 
 pub mod chime;
+pub mod glyph;
 pub mod noise;
 pub mod persist;
 pub mod session;
@@ -14,6 +15,7 @@ pub mod settings;
 pub mod timer;
 
 pub use chime::{frequency_for, ChimeVoice};
+pub use glyph::{tray_glyph, GlyphFill, GlyphStyle};
 pub use noise::{NoiseSource, DEFAULT_FADE_MS};
 pub use persist::Persister;
 pub use session::{Fingerprint, Session};

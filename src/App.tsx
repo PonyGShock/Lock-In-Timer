@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { call } from "./bridge";
 import { Ring } from "./components/Ring";
 import { SettingsSheet } from "./components/SettingsSheet";
-import { GearIcon, Slider, Switch, WaveIcon } from "./components/ui";
+import { CupMark, GearIcon, Slider, Switch, WaveIcon } from "./components/ui";
 import { useLockIn } from "./store";
 
 export default function App() {
@@ -73,7 +73,10 @@ export default function App() {
     <div className="card" data-phase={timer.phase}>
       <div className="face" ref={faceRef}>
         <header className="header">
-          <span className="wordmark">Lock In</span>
+          <span className="brand">
+            <CupMark />
+            Lock In
+          </span>
           <button
             ref={gearRef}
             className="icon-button"

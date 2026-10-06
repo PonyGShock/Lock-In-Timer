@@ -1,6 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+// Bundled rather than fetched: the app never touches the network.
+import "@fontsource-variable/fraunces/soft.css";
+
 import App from "./App";
 import { inTauri } from "./bridge";
 import "./styles.css";

@@ -9,7 +9,7 @@ You need [Rust](https://rustup.rs) and [Node 20+](https://nodejs.org). Then:
 
 ```sh
 npm install
-npm run icons   # generates src-tauri/icons from app-icon.png
+npm run icons   # generates src-tauri/icons from brand/icon.svg
 npm run app     # runs the real app
 ```
 

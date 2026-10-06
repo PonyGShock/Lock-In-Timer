@@ -45,7 +45,7 @@ export function SettingsSheet({
         <button ref={backRef} className="icon-button" onClick={onClose} aria-label="Back to timer">
           <BackIcon />
         </button>
-        <span className="wordmark">Settings</span>
+        <span className="brand">Settings</span>
         <span style={{ width: 30 }} />
       </header>
 

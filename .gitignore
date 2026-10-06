@@ -3,7 +3,7 @@ node_modules/
 dist/
 target/
 
-# Generated from app-icon.png by `npm run icons`; not worth versioning.
+# Generated from brand/*.svg by `npm run icons`; not worth versioning.
 src-tauri/icons/
 src-tauri/gen/
 

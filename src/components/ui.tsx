@@ -153,6 +153,23 @@ export function Row({
   );
 }
 
+/// The app's mark: a cup seen from above, its crema a timer ring.
+export function CupMark() {
+  return (
+    <svg className="cup-mark" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="10" cy="12" r="6.6" fill="none" stroke="currentColor" strokeWidth="1.9" />
+      <path d="M17 12h4.4" stroke="currentColor" strokeWidth="2.7" strokeLinecap="round" />
+      <path
+        className="cup-mark__crema"
+        d="M10 8.7a3.3 3.3 0 1 1-3.3 3.3"
+        fill="none"
+        strokeWidth="2.3"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function GearIcon() {
   return (
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">

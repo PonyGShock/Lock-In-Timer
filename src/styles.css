@@ -26,6 +26,16 @@
 
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text",
     "Segoe UI", system-ui, "Helvetica Neue", sans-serif;
+  /* A soft, warm serif for the few words that set the mood: the name, the
+     phase. Everything that has to be read quickly stays in the system face. */
+  --serif: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
+
+  --crema: #d9a066;
+  /* Text on an accent fill. Dark mode's accents are light, so it flips to
+     espresso there; white on pale caramel was too faint to read. */
+  --on-accent: #fff;
+  --saucer: rgba(192, 133, 82, 0.07);
+  --grain-opacity: 0.05;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,6 +53,10 @@
     --long-break: #8aa0b2;
 
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 40px rgba(0, 0, 0, 0.5);
+    --crema: #e2ad78;
+  --on-accent: #21150e;
+    --saucer: rgba(217, 159, 106, 0.06);
+    --grain-opacity: 0.07;
   }
 }
 
@@ -60,6 +74,10 @@
   --long-break: #8aa0b2;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 40px rgba(0, 0, 0, 0.5);
+  --crema: #e2ad78;
+  --on-accent: #21150e;
+  --saucer: rgba(217, 159, 106, 0.06);
+  --grain-opacity: 0.07;
 }
 
 * {
@@ -141,10 +159,24 @@ button {
 /* The timer itself. A wrapper so the whole face can be made inert while the
    settings sheet covers it. */
 .face {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* A faint paper grain, like a café menu card. Drawn once by the browser from
+   an SVG noise filter; nothing is loaded. */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.24 0 0 0 0 0.16 0 0 0 1.4 -0.45'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: var(--grain-opacity);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* A soft wash of the phase colour pooling at the top of the card. */
@@ -169,12 +201,25 @@ button {
   padding: 14px 16px 6px;
 }
 
-.wordmark {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 560;
+  font-variation-settings: "SOFT" 100, "WONK" 0;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+.cup-mark {
+  flex: none;
   color: var(--ink-2);
+}
+.cup-mark__crema {
+  stroke: var(--accent, var(--crema));
+  transition: stroke 0.6s var(--ease);
 }
 
 .icon-button {
@@ -232,7 +277,7 @@ button {
 }
 .chip[aria-pressed="true"] {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 :root[data-theme="dark"] .chip[aria-pressed="true"],
 .chip[aria-pressed="true"] {
@@ -260,6 +305,26 @@ button {
   height: 194px;
   display: grid;
   place-items: center;
+}
+
+/* The ring sits in a saucer: a faint disc of the phase colour around it and
+   a hairline rim, so the dial reads as a cup seen from above. */
+.ring::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, transparent 80%, var(--saucer) 81%);
+  box-shadow: inset 0 0 0 0.5px var(--line);
+  transition: background 0.6s var(--ease);
+}
+.card[data-phase="shortBreak"] .ring::before,
+.card[data-phase="longBreak"] .ring::before {
+  background: radial-gradient(
+    closest-side,
+    transparent 80%,
+    color-mix(in srgb, var(--accent) 8%, transparent) 81%
+  );
 }
 
 .ring svg {
@@ -311,11 +376,11 @@ button {
 }
 
 .ring__phase {
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 450;
+  font-variation-settings: "SOFT" 100;
+  color: var(--ink-2);
 }
 
 .dots {
@@ -355,11 +420,19 @@ button {
   height: 46px;
   border-radius: var(--radius-pill);
   background: var(--accent);
-  color: #fff;
+  /* A touch of glaze, like a ceramic button. Older webviews without
+     color-mix keep the flat colour above. */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 86%, #fff) 0%,
+    var(--accent) 100%
+  );
+  color: var(--on-accent);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  box-shadow: 0 1px 2px rgba(58, 43, 33, 0.18), 0 6px 16px rgba(58, 43, 33, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 1px 2px rgba(58, 43, 33, 0.18),
+    0 6px 16px rgba(58, 43, 33, 0.14);
   transition: transform var(--fast) var(--ease), filter var(--fast) ease,
     background 0.6s var(--ease);
 }
@@ -565,6 +638,7 @@ button {
 .sheet {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   background: var(--bg);
