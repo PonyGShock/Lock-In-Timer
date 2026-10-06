@@ -60,6 +60,8 @@ export interface AppState {
   timer: Snapshot;
   settings: Settings;
   presets: Preset[];
+  /// Rust's `std::env::consts::OS`: "macos", "windows", "linux", "ios", ...
+  platform: string;
 }
 
 export const CHIME_VOICES: { id: ChimeVoice; label: string }[] = [

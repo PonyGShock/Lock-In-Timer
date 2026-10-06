@@ -138,6 +138,15 @@ button {
   --accent: var(--long-break);
 }
 
+/* The timer itself. A wrapper so the whole face can be made inert while the
+   settings sheet covers it. */
+.face {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* A soft wash of the phase colour pooling at the top of the card. */
 .card::before {
   content: "";
@@ -646,10 +655,28 @@ button {
 }
 
 .row--tappable {
+  width: 100%;
+  text-align: left;
   transition: opacity var(--fast) ease;
 }
 .row--tappable:active {
   opacity: 0.55;
+}
+
+.group__note {
+  margin: 0;
+  padding: 0 4px 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+/* Keyboard focus has to be visible somewhere; the buttons here are otherwise
+   bare text. Mouse clicks do not trigger it. */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent, var(--focus));
+  outline-offset: 2px;
 }
 
 .link {

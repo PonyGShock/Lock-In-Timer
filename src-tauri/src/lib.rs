@@ -8,13 +8,12 @@ mod window;
 use std::thread;
 use std::time::Duration;
 
-use lockin_core::{Phase, RunState, Snapshot, Transition};
-use tauri::Manager;
+use lockin_core::{Fingerprint, Persister, Phase, Settings, Snapshot, Transition};
+use tauri::{Manager, RunEvent};
 use tauri_plugin_notification::NotificationExt;
 
 use crate::audio::Audio;
 use crate::engine::Engine;
-use lockin_core::settings::Settings;
 
 /// How often the clock is advanced. Fine enough that a pause feels immediate,
 /// coarse enough to stay invisible in a CPU graph.
@@ -37,19 +36,16 @@ pub fn run() {
                 None,
             ));
 
-    builder
+    let app = builder
         .invoke_handler(tauri::generate_handler![
             commands::get_state,
             commands::timer_toggle,
-            commands::timer_start,
-            commands::timer_pause,
             commands::timer_reset,
             commands::timer_skip,
-            commands::timer_restart_phase,
-            commands::set_preset,
-            commands::set_custom_preset,
+            commands::select_preset,
             commands::update_settings,
             commands::preview_chime,
+            commands::open_repository,
             commands::hide_window,
             commands::quit_app,
         ])
@@ -68,12 +64,12 @@ pub fn run() {
                 .unwrap_or_else(|_| std::path::PathBuf::from("lockin-settings.json"));
 
             let settings = Settings::load(&settings_path);
-            let engine = Engine::new(settings, settings_path, Audio::spawn());
-            engine.sync_noise();
+            let engine = Engine::new(settings, Persister::spawn(settings_path), Audio::spawn());
             app.manage(engine);
 
             #[cfg(desktop)]
             {
+                commands::reconcile_launch_at_login(&handle, &handle.state::<Engine>());
                 tray::build(&handle)?;
                 let state = handle.state::<Engine>().state();
                 tray::apply_snapshot(&handle, &state.timer, state.settings.show_clock_in_menu_bar);
@@ -94,45 +90,50 @@ pub fn run() {
                     let _ = _window.hide();
                 }
 
-                // While developing, a popover that vanishes the moment devtools
-                // take focus is unusable.
-                #[cfg(not(debug_assertions))]
                 if let WindowEvent::Focused(false) = _event {
-                    let _ = _window.hide();
+                    window::hide_on_blur(_window);
                 }
             }
         })
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())
         .expect("Lock In failed to start");
+
+    app.run(|handle, event| {
+        // Settings are written a moment after they change, so a slider drag is
+        // one write and not a hundred. Quitting inside that moment must not
+        // lose the change.
+        if let RunEvent::Exit = event {
+            if let Some(engine) = handle.try_state::<Engine>() {
+                engine.flush();
+            }
+        }
+    });
 }
 
 fn spawn_tick_loop(handle: tauri::AppHandle) {
     thread::spawn(move || {
-        let mut last: Option<(String, RunState, Phase, u32, u32)> = None;
+        let mut last: Option<Fingerprint> = None;
 
         loop {
             thread::sleep(TICK);
 
             let engine = handle.state::<Engine>();
             let transition = engine.tick();
-            let state = engine.state();
 
-            // The clock only moves once a second; the ring in between is the
-            // stylesheet's job. Emitting every tick would be four wasted
-            // round trips out of five.
-            let fingerprint = (
-                state.timer.clock.clone(),
-                state.timer.state,
-                state.timer.phase,
-                state.timer.round,
-                state.timer.completed_focus,
-            );
-            if last.as_ref() != Some(&fingerprint) {
-                last = Some(fingerprint);
-                #[cfg(desktop)]
-                tray::apply_snapshot(&handle, &state.timer, state.settings.show_clock_in_menu_bar);
-                window::broadcast(&handle, &state);
+            // The clock face changes once a second; the ring in between is the
+            // stylesheet's job. Comparing a copy-only fingerprint is free, so
+            // the full state — settings, presets, strings — is only built on
+            // the one tick in five that has something new to show.
+            let fingerprint = engine.fingerprint();
+            if last == Some(fingerprint) && transition.is_none() {
+                continue;
             }
+            last = Some(fingerprint);
+
+            let state = engine.state();
+            #[cfg(desktop)]
+            tray::apply_snapshot(&handle, &state.timer, state.settings.show_clock_in_menu_bar);
+            window::broadcast(&handle, &state);
 
             if let Some(transition) = transition {
                 if transition.completed && state.settings.notifications_enabled {

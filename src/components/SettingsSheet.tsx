@@ -1,8 +1,9 @@
-import { CHIME_VOICES, type AppState, type Settings, type Theme } from "../types";
-import { openExternal } from "../bridge";
-import { BackIcon, Group, Row, Segmented, Slider, Stepper, Switch } from "./ui";
+import { useEffect, useRef } from "react";
 
-const REPOSITORY = "https://github.com/PonyGShock/Lock-In-Timer";
+import { call } from "../bridge";
+import type { SettingsPatch } from "../settings";
+import { CHIME_VOICES, type AppState, type Theme } from "../types";
+import { BackIcon, Group, Row, Segmented, Slider, Stepper, Switch } from "./ui";
 
 const THEMES: { id: Theme; label: string }[] = [
   { id: "system", label: "System" },
@@ -10,46 +11,38 @@ const THEMES: { id: Theme; label: string }[] = [
   { id: "dark", label: "Dark" },
 ];
 
+const DESKTOP = new Set(["macos", "windows", "linux"]);
+
 const minutes = (secs: number) => `${Math.round(secs / 60)} min`;
 
 export function SettingsSheet({
   open,
   state,
   onPatch,
-  onCustomPreset,
-  onPreviewChime,
   onClose,
-  onQuit,
 }: {
   open: boolean;
   state: AppState;
-  onPatch: (patch: Partial<Settings>) => void;
-  onCustomPreset: (preset: {
-    focusSecs: number;
-    shortBreakSecs: number;
-    longBreakSecs: number;
-    rounds: number;
-  }) => void;
-  onPreviewChime: () => void;
+  onPatch: (patch: SettingsPatch) => void;
   onClose: () => void;
-  onQuit: () => void;
 }) {
-  const { settings } = state;
+  const { settings, platform } = state;
   const custom = settings.customPreset;
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
 
-  const patchCustom = (patch: Partial<typeof custom>) =>
-    onCustomPreset({
-      focusSecs: custom.focusSecs,
-      shortBreakSecs: custom.shortBreakSecs,
-      longBreakSecs: custom.longBreakSecs,
-      rounds: custom.rounds,
-      ...patch,
-    });
+  // Closed, the sheet is off-screen; inert keeps it out of the tab order and
+  // away from assistive tech. Open, focus moves into it so the keyboard is
+  // where the eyes are.
+  useEffect(() => {
+    sheetRef.current?.toggleAttribute("inert", !open);
+    if (open) backRef.current?.focus();
+  }, [open]);
 
   return (
-    <div className="sheet" data-open={open} aria-hidden={!open}>
+    <div className="sheet" data-open={open} ref={sheetRef} role="dialog" aria-label="Settings">
       <header className="header">
-        <button className="icon-button" onClick={onClose} aria-label="Back to timer">
+        <button ref={backRef} className="icon-button" onClick={onClose} aria-label="Back to timer">
           <BackIcon />
         </button>
         <span className="wordmark">Settings</span>
@@ -58,16 +51,11 @@ export function SettingsSheet({
 
       <div className="sheet__body">
         <Group title="Sessions">
-          <Row
-            title="Start breaks automatically"
-            hint="A break begins the moment focus ends."
-          >
+          <Row title="Start breaks automatically" hint="A break begins the moment focus ends.">
             <Switch
               label="Start breaks automatically"
               checked={settings.behavior.autoStartBreaks}
-              onChange={(autoStartBreaks) =>
-                onPatch({ behavior: { ...settings.behavior, autoStartBreaks } })
-              }
+              onChange={(autoStartBreaks) => onPatch({ behavior: { autoStartBreaks } })}
             />
           </Row>
           <Row
@@ -77,14 +65,15 @@ export function SettingsSheet({
             <Switch
               label="Start focus automatically"
               checked={settings.behavior.autoStartFocus}
-              onChange={(autoStartFocus) =>
-                onPatch({ behavior: { ...settings.behavior, autoStartFocus } })
-              }
+              onChange={(autoStartFocus) => onPatch({ behavior: { autoStartFocus } })}
             />
           </Row>
         </Group>
 
-        <Group title="Custom lengths">
+        <Group
+          title="Custom lengths"
+          note="Used when Custom is selected. Changing them never interrupts a session in progress."
+        >
           <Row title="Focus">
             <Stepper
               label="focus length"
@@ -93,7 +82,7 @@ export function SettingsSheet({
               max={180 * 60}
               step={5 * 60}
               format={minutes}
-              onChange={(focusSecs) => patchCustom({ focusSecs })}
+              onChange={(focusSecs) => onPatch({ customPreset: { focusSecs } })}
             />
           </Row>
           <Row title="Short break">
@@ -104,7 +93,7 @@ export function SettingsSheet({
               max={60 * 60}
               step={60}
               format={minutes}
-              onChange={(shortBreakSecs) => patchCustom({ shortBreakSecs })}
+              onChange={(shortBreakSecs) => onPatch({ customPreset: { shortBreakSecs } })}
             />
           </Row>
           <Row title="Long break">
@@ -115,20 +104,17 @@ export function SettingsSheet({
               max={120 * 60}
               step={5 * 60}
               format={minutes}
-              onChange={(longBreakSecs) => patchCustom({ longBreakSecs })}
+              onChange={(longBreakSecs) => onPatch({ customPreset: { longBreakSecs } })}
             />
           </Row>
-          <Row
-            title="Rounds"
-            hint="Focus sessions before the long break."
-          >
+          <Row title="Rounds" hint="Focus sessions before the long break.">
             <Stepper
               label="rounds"
               value={custom.rounds}
               min={1}
               max={12}
               format={(value) => String(value)}
-              onChange={(rounds) => patchCustom({ rounds })}
+              onChange={(rounds) => onPatch({ customPreset: { rounds } })}
             />
           </Row>
         </Group>
@@ -155,36 +141,34 @@ export function SettingsSheet({
               onChange={(chimeVolume) => onPatch({ chimeVolume })}
             />
           </Row>
-          <div className="row row--tappable" onClick={onPreviewChime}>
+          <button className="row row--tappable" onClick={() => void call("preview_chime")}>
             <span className="link">Hear it</span>
-          </div>
+          </button>
         </Group>
 
         <Group title="Noise">
-          <Row title="Keep playing through breaks">
+          <Row
+            title="Keep playing through breaks"
+            hint="Volume and the on switch are on the main screen."
+          >
             <Switch
               label="Keep noise playing through breaks"
               checked={settings.noiseDuringBreaks}
               onChange={(noiseDuringBreaks) => onPatch({ noiseDuringBreaks })}
             />
           </Row>
-          <Row title="Volume" stack>
-            <Slider
-              label="Noise volume"
-              value={settings.noiseVolume}
-              onChange={(noiseVolume) => onPatch({ noiseVolume })}
-            />
-          </Row>
         </Group>
 
         <Group title="App">
-          <Row title="Countdown in the menu bar" hint="Hidden while the timer is idle.">
-            <Switch
-              label="Show the countdown in the menu bar"
-              checked={settings.showClockInMenuBar}
-              onChange={(showClockInMenuBar) => onPatch({ showClockInMenuBar })}
-            />
-          </Row>
+          {platform === "macos" && (
+            <Row title="Countdown in the menu bar" hint="Hidden while the timer is idle.">
+              <Switch
+                label="Show the countdown in the menu bar"
+                checked={settings.showClockInMenuBar}
+                onChange={(showClockInMenuBar) => onPatch({ showClockInMenuBar })}
+              />
+            </Row>
+          )}
           <Row title="Notifications">
             <Switch
               label="Show notifications"
@@ -192,13 +176,15 @@ export function SettingsSheet({
               onChange={(notificationsEnabled) => onPatch({ notificationsEnabled })}
             />
           </Row>
-          <Row title="Open at login">
-            <Switch
-              label="Open at login"
-              checked={settings.launchAtLogin}
-              onChange={(launchAtLogin) => onPatch({ launchAtLogin })}
-            />
-          </Row>
+          {DESKTOP.has(platform) && (
+            <Row title="Open at login">
+              <Switch
+                label="Open at login"
+                checked={settings.launchAtLogin}
+                onChange={(launchAtLogin) => onPatch({ launchAtLogin })}
+              />
+            </Row>
+          )}
           <Row title="Appearance" stack>
             <Segmented
               value={settings.theme}
@@ -209,15 +195,12 @@ export function SettingsSheet({
         </Group>
 
         <Group title="About">
-          <div
-            className="row row--tappable"
-            onClick={() => void openExternal(REPOSITORY)}
-          >
+          <button className="row row--tappable" onClick={() => void call("open_repository")}>
             <span className="link">Source code and issues</span>
-          </div>
-          <div className="row row--tappable" onClick={onQuit}>
+          </button>
+          <button className="row row--tappable" onClick={() => void call("quit_app")}>
             <span className="link">Quit Lock In</span>
-          </div>
+          </button>
         </Group>
 
         <p className="about">

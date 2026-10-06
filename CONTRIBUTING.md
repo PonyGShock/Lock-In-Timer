@@ -34,6 +34,10 @@ Query parameters seed a state to design against:
 ?state=running&remaining=1122&round=2&done=3&noise=1&theme=dark
 ```
 
+Add `&platform=windows` to see the Windows variant of the settings, and
+`&latency=250` to delay every reply the way slow IPC would — useful when
+touching anything that updates optimistically.
+
 If you change something the backend owns — a new command, a new settings
 field — update `src/mock.ts` too, or the browser view quietly drifts away from
 the real app.
@@ -52,8 +56,8 @@ CI runs exactly these, plus a real macOS and Windows build.
 ## How the code is laid out
 
 `crates/lockin-core` holds everything that can be tested without a window or a
-sound card: the timer state machine, the noise and chime synthesis, and the
-settings file. If you are adding logic, try to put it here — it is the part
+sound card: the timer state machine, the session rules that tie it to the
+settings, the noise and chime synthesis, and the settings file and its writer. If you are adding logic, try to put it here — it is the part
 that is cheap to test and hard to get subtly wrong unnoticed.
 
 `src-tauri` is the app: tray, audio device, window, and the commands the UI

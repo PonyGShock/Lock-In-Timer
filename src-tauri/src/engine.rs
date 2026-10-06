@@ -1,17 +1,25 @@
-use std::path::PathBuf;
+//! The desktop app's handle on the session.
+//!
+//! The rules live in `lockin_core::Session`, where they are tested. This adds
+//! what a running app needs around them: a clock, the audio thread, the
+//! settings writer, and one lock so that every command sees and leaves the
+//! session in a consistent state. Saves are queued while the lock is held, so
+//! they reach the writer in the order the changes were made; the writing
+//! itself happens on the writer's thread, so a slow disk never stalls the
+//! timer. Sound is sent after the lock is released.
+
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard, PoisonError};
 use std::time::Instant;
 
 use lockin_core::{
-    chime::frequency_for,
-    timer::{builtin_presets, Preset, Snapshot, Timer, Transition},
-    Phase, RunState,
+    builtin_presets, frequency_for, today, Fingerprint, Persister, Preset, Session, Settings,
+    Snapshot, Transition,
 };
 use serde::Serialize;
+use serde_json::Value;
 
 use crate::audio::Audio;
-use lockin_core::settings::{Settings, CUSTOM_PRESET_ID};
 
 /// Everything the window needs in a single payload, so the UI never has to
 /// stitch several calls together.
@@ -21,40 +29,38 @@ pub struct AppState {
     pub timer: Snapshot,
     pub settings: Settings,
     pub presets: Vec<Preset>,
+    /// `macos`, `windows`, `linux`, ... Some settings only mean anything on
+    /// one platform, and the interface hides them elsewhere.
+    pub platform: &'static str,
 }
 
-/// The noise configuration currently handed to the audio thread. The volume
-/// is compared as an integer so float jitter never counts as a change.
+/// The noise state last handed to the audio thread. Volume is compared as an
+/// integer so float jitter never counts as a change.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct NoiseWish {
     enabled: bool,
     volume: u32,
 }
 
+/// Ticks between checks for a new calendar day: about once a minute.
+const DAY_CHECK_TICKS: u64 = 300;
+
 pub struct Engine {
-    timer: Mutex<Timer>,
-    settings: Mutex<Settings>,
-    last_noise: Mutex<Option<NoiseWish>>,
+    session: Mutex<Session>,
+    noise: Mutex<Option<NoiseWish>>,
     audio: Audio,
-    settings_path: PathBuf,
+    persister: Persister,
     started: Instant,
     ticks: AtomicU64,
 }
 
 impl Engine {
-    pub fn new(settings: Settings, settings_path: PathBuf, audio: Audio) -> Self {
-        let mut settings = settings.sanitized();
-        settings.roll_over_day();
-
-        let mut timer = Timer::new(settings.active_preset(), settings.behavior);
-        timer.set_completed_focus(settings.completed_focus);
-
+    pub fn new(settings: Settings, persister: Persister, audio: Audio) -> Self {
         Engine {
-            timer: Mutex::new(timer),
-            settings: Mutex::new(settings),
-            last_noise: Mutex::new(None),
+            session: Mutex::new(Session::new(settings, &today())),
+            noise: Mutex::new(None),
             audio,
-            settings_path,
+            persister,
             started: Instant::now(),
             ticks: AtomicU64::new(0),
         }
@@ -64,218 +70,148 @@ impl Engine {
         self.started.elapsed().as_millis() as u64
     }
 
-    pub fn settings(&self) -> Settings {
-        self.settings.lock().unwrap().clone()
+    /// A panic while holding the lock leaves the session as it was, which is
+    /// still a perfectly good session; refusing every later command over it
+    /// would be worse.
+    fn session(&self) -> MutexGuard<'_, Session> {
+        self.session.lock().unwrap_or_else(PoisonError::into_inner)
     }
 
     pub fn state(&self) -> AppState {
-        let timer = self.timer.lock().unwrap().snapshot();
-        let settings = self.settings.lock().unwrap().clone();
+        let session = self.session();
+        let settings = session.settings().clone();
         let mut presets = builtin_presets();
         presets.push(settings.custom_preset.clone());
         AppState {
-            timer,
+            timer: session.snapshot(),
             settings,
             presets,
+            platform: std::env::consts::OS,
         }
     }
 
-    // --- transport -------------------------------------------------------
-
-    pub fn start(&self) {
-        {
-            let mut timer = self.timer.lock().unwrap();
-            // Re-anchor first: time spent idle or paused must not be charged
-            // to the phase the moment it resumes.
-            timer.sync_clock(self.now_ms());
-            timer.start();
-        }
-        self.sync_noise();
+    pub fn settings(&self) -> Settings {
+        self.session().settings().clone()
     }
 
-    pub fn pause(&self) {
-        self.timer.lock().unwrap().pause();
-        self.sync_noise();
+    pub fn fingerprint(&self) -> Fingerprint {
+        self.session().fingerprint()
     }
+
+    // --- commands --------------------------------------------------------
 
     pub fn toggle(&self) {
-        let running = self.timer.lock().unwrap().is_running();
-        if running {
-            self.pause();
-        } else {
-            self.start();
-        }
+        let now = self.now_ms();
+        self.session().toggle(now);
+        self.sync_noise();
     }
 
     pub fn reset(&self) {
-        self.timer.lock().unwrap().reset();
-        self.sync_noise();
-    }
-
-    pub fn restart_phase(&self) {
-        self.timer.lock().unwrap().restart_phase();
+        self.session().reset();
         self.sync_noise();
     }
 
     /// Ends the current phase by hand. No chime: the user already knows.
     pub fn skip(&self) {
-        {
-            let mut timer = self.timer.lock().unwrap();
-            timer.sync_clock(self.now_ms());
-            timer.skip();
-        }
+        let now = self.now_ms();
+        self.session().skip(now);
         self.sync_noise();
     }
 
-    // --- configuration ---------------------------------------------------
-
-    pub fn set_preset(&self, id: &str) {
-        let preset = {
-            let mut settings = self.settings.lock().unwrap();
-            settings.preset_id = id.to_string();
-            *settings = settings.clone().sanitized();
-            settings.active_preset()
-        };
+    pub fn select_preset(&self, id: &str) {
         {
-            let mut timer = self.timer.lock().unwrap();
-            timer.sync_clock(self.now_ms());
-            timer.set_preset(preset);
-        }
-        self.persist();
-        self.sync_noise();
-    }
-
-    pub fn set_custom_preset(&self, focus_secs: u32, short_secs: u32, long_secs: u32, rounds: u32) {
-        let preset = {
-            let mut settings = self.settings.lock().unwrap();
-            settings.custom_preset = Preset::new(
-                CUSTOM_PRESET_ID,
-                "Custom",
-                focus_secs,
-                short_secs,
-                long_secs,
-                rounds,
-            )
-            .sanitized();
-            settings.preset_id = CUSTOM_PRESET_ID.to_string();
-            settings.active_preset()
-        };
-        {
-            let mut timer = self.timer.lock().unwrap();
-            timer.sync_clock(self.now_ms());
-            timer.set_preset(preset);
-        }
-        self.persist();
-        self.sync_noise();
-    }
-
-    /// Applies a whole settings object from the UI. The running phase is left
-    /// alone unless the active preset's durations actually moved.
-    pub fn update_settings(&self, incoming: Settings) {
-        let (behavior, preset, preset_changed) = {
-            let mut settings = self.settings.lock().unwrap();
-            let previous = settings.active_preset();
-            let mut incoming = incoming.sanitized();
-            // The session count belongs to the engine, not the form.
-            incoming.completed_focus = settings.completed_focus;
-            incoming.completed_date = settings.completed_date.clone();
-            *settings = incoming;
-            let preset = settings.active_preset();
-            (settings.behavior, preset.clone(), preset != previous)
-        };
-
-        {
-            let mut timer = self.timer.lock().unwrap();
-            timer.set_behavior(behavior);
-            if preset_changed {
-                timer.sync_clock(self.now_ms());
-                timer.set_preset(preset);
+            let mut session = self.session();
+            if session.select_preset(id) {
+                self.persister.save(session.settings());
             }
         }
+        self.sync_noise();
+    }
 
-        self.persist();
+    pub fn apply_patch(&self, patch: &Value) {
+        {
+            let mut session = self.session();
+            if session.apply_patch(patch) {
+                self.persister.save(session.settings());
+            }
+        }
         self.sync_noise();
     }
 
     pub fn preview_chime(&self) {
-        let settings = self.settings.lock().unwrap();
+        let settings = self.settings();
         self.audio.chime(
             settings.chime_voice,
-            frequency_for(Phase::Focus),
+            frequency_for(lockin_core::Phase::Focus),
             settings.chime_volume,
         );
+    }
+
+    /// Writes any pending settings to disk and waits for it. Called on exit.
+    pub fn flush(&self) {
+        self.persister.flush();
     }
 
     // --- running ---------------------------------------------------------
 
     /// Drives the clock forward. Returns the transition to announce, if any.
     pub fn tick(&self) -> Option<Transition> {
-        let transition = self.timer.lock().unwrap().advance(self.now_ms());
+        let now = self.now_ms();
+        let check_day = self.ticks.fetch_add(1, Ordering::Relaxed) % DAY_CHECK_TICKS == 0;
 
-        if let Some(transition) = transition {
-            if transition.completed {
-                let completed = self.timer.lock().unwrap().completed_focus();
-                let settings = {
-                    let mut settings = self.settings.lock().unwrap();
-                    settings.completed_focus = completed;
-                    settings.clone()
-                };
-                if settings.chime_enabled {
-                    self.audio.chime(
-                        settings.chime_voice,
-                        frequency_for(transition.ended),
-                        settings.chime_volume,
-                    );
-                }
-                self.persist();
+        let (transition, chime) = {
+            let mut session = self.session();
+            let transition = session.advance(now);
+            let finished = transition.filter(|t| t.completed);
+            let rolled = check_day && session.roll_over_day(&today());
+
+            let settings = session.settings();
+            if finished.is_some() || rolled {
+                // Under the lock: a copy taken here and queued after release
+                // could land behind a newer one from a command, and the file
+                // would keep the older settings.
+                self.persister.save(settings);
             }
-            self.sync_noise();
-        } else if self.ticks.fetch_add(1, Ordering::Relaxed) % 300 == 0 {
-            // Roughly once a minute, so the day's count clears at midnight
-            // even when the app is left running.
-            self.roll_over_day();
-        }
+            let chime = finished.filter(|_| settings.chime_enabled).map(|t| {
+                (
+                    settings.chime_voice,
+                    frequency_for(t.ended),
+                    settings.chime_volume,
+                )
+            });
+            (transition, chime)
+        };
 
+        if let Some((voice, frequency, volume)) = chime {
+            self.audio.chime(voice, frequency, volume);
+        }
+        // Every tick, not only on a change: if a command to the audio thread
+        // was ever dropped, the next tick notices and sends it again.
+        self.sync_noise();
         transition
     }
 
-    pub fn roll_over_day(&self) {
-        let rolled = self.settings.lock().unwrap().roll_over_day();
-        if rolled {
-            self.timer.lock().unwrap().set_completed_focus(0);
-            self.persist();
-        }
-    }
-
-    /// Recomputes whether noise should be playing and tells the audio thread
-    /// only when the answer has changed.
-    pub fn sync_noise(&self) {
-        let settings = self.settings.lock().unwrap().clone();
-        let snapshot = self.timer.lock().unwrap().snapshot();
-
-        let should_play = settings.noise_enabled
-            && snapshot.state == RunState::Running
-            && (snapshot.phase == Phase::Focus || settings.noise_during_breaks);
-
+    /// Tells the audio thread whether the rumble should play, when that has
+    /// changed since it was last told.
+    fn sync_noise(&self) {
+        let (enabled, volume) = {
+            let session = self.session();
+            (session.noise_wanted(), session.settings().noise_volume)
+        };
         let wish = NoiseWish {
-            enabled: should_play,
-            volume: (settings.noise_volume * 1000.0) as u32,
+            enabled,
+            volume: (volume * 1000.0).round() as u32,
         };
 
-        let mut last = self.last_noise.lock().unwrap();
+        let mut last = self.noise.lock().unwrap_or_else(PoisonError::into_inner);
         if *last == Some(wish) {
             return;
         }
-        *last = Some(wish);
-        drop(last);
-
-        self.audio.set_noise(should_play, settings.noise_volume);
-    }
-
-    pub fn persist(&self) {
-        let settings = self.settings.lock().unwrap().clone();
-        if let Err(error) = settings.save(&self.settings_path) {
-            eprintln!("lock-in: could not save settings: {error}");
+        // Remember the wish only once the audio thread has actually taken it.
+        // Recording it first meant a dropped command left this cache claiming
+        // a state the audio never reached, and noise played on through breaks.
+        if self.audio.set_noise(enabled, volume) {
+            *last = Some(wish);
         }
     }
 }

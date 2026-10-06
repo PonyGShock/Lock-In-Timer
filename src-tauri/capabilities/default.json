@@ -1,12 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What the popover window is allowed to reach. Everything else the app does happens in Rust.",
+  "description": "What the popover window is allowed to reach: calling the app's own commands and hearing its state events. Opening links, notifications and everything else happen in Rust, so the webview is granted none of them.",
   "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "core:window:allow-start-dragging",
-    "notification:default",
-    "opener:allow-open-url"
-  ]
+  "permissions": ["core:default"]
 }

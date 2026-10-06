@@ -132,14 +132,17 @@ npm run build               # typecheck and bundle the UI
 ```
 crates/lockin-core     no system dependencies, all the logic worth testing
   timer.rs             the phase state machine, driven by an injected clock
+  session.rs           the timer and settings together, and the rules joining them
+  settings.rs          the settings file, its clamping and its migrations
+  persist.rs           one writer thread that batches saves and flushes on exit
   noise.rs             the ambient rumble and its fade envelope
   chime.rs             additive synthesis of the boundary chimes
-  settings.rs          the settings file, its clamping and its migrations
 src-tauri              the desktop app
-  engine.rs            owns the timer and decides what should be audible
+  engine.rs            a thin shell around a Session that drives sound and saving
   audio.rs             a thread owning the output device, fed over a channel
   tray.rs              menu bar icon, title and menu (desktop only)
 src                    the React interface
+  store.ts             app state, with settings changes applied optimistically
 ```
 
 Two decisions are worth knowing about before contributing:
@@ -156,6 +159,12 @@ repository. Noise is generated sample by sample, so it never loops and the
 installer stays small; the chimes are sums of decaying partials at inharmonic
 ratios, which is what makes a struck bell sound struck. It also means there is
 no sample licence for anyone to trip over when they fork this.
+
+**Settings travel as patches.** The interface sends only the fields that
+changed, never a whole copy of the settings, so a change made a moment earlier
+— by another switch, the tray, or the day rolling over — cannot be overwritten
+by a stale copy. Changing the lengths of the preset in use retunes the running
+session instead of restarting it.
 
 ## Roadmap
 

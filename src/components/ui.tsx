@@ -111,10 +111,19 @@ export function Stepper({
   );
 }
 
-export function Group({ title, children }: { title: string; children: ReactNode }) {
+export function Group({
+  title,
+  note,
+  children,
+}: {
+  title: string;
+  note?: string;
+  children: ReactNode;
+}) {
   return (
     <section className="group">
       <h2 className="group__title">{title}</h2>
+      {note && <p className="group__note">{note}</p>}
       <div className="group__body">{children}</div>
     </section>
   );

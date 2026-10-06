@@ -214,6 +214,10 @@ impl Timer {
         self.state == RunState::Running
     }
 
+    pub fn round(&self) -> u32 {
+        self.round
+    }
+
     pub fn completed_focus(&self) -> u32 {
         self.completed_focus
     }
@@ -222,19 +226,39 @@ impl Timer {
         self.completed_focus = count;
     }
 
-    /// Swaps the durations and returns to an idle focus phase.
+    /// Switches to a different preset and returns to an idle focus phase.
     pub fn set_preset(&mut self, preset: Preset) {
         self.preset = preset.sanitized();
         self.reset();
     }
 
-    pub fn start(&mut self) {
+    /// Adopts new durations for the current preset without throwing away the
+    /// session in progress.
+    ///
+    /// A phase that has not started takes its new length straight away. A
+    /// phase already under way keeps the time it has left, capped at the new
+    /// length so it can never show more remaining than the phase now holds;
+    /// the new lengths apply in full from the next phase.
+    pub fn retune(&mut self, preset: Preset) {
+        let untouched = self.state == RunState::Idle && self.remaining_ms == self.phase_total_ms();
+        self.preset = preset.sanitized();
+        self.round = self.round.min(self.preset.rounds);
+        let total = self.phase_total_ms();
+        self.remaining_ms = if untouched {
+            total
+        } else {
+            self.remaining_ms.min(total)
+        };
+    }
+
+    /// Starts or resumes. Takes the current time because the clock has to be
+    /// re-anchored here: otherwise time spent idle or paused would be charged
+    /// to the phase on the very next tick.
+    pub fn start(&mut self, now_ms: u64) {
         if self.state == RunState::Running {
             return;
         }
-        if self.remaining_ms == 0 {
-            self.remaining_ms = self.phase_total_ms();
-        }
+        self.clock_ms = now_ms;
         self.state = RunState::Running;
     }
 
@@ -244,10 +268,10 @@ impl Timer {
         }
     }
 
-    pub fn toggle(&mut self) {
+    pub fn toggle(&mut self, now_ms: u64) {
         match self.state {
             RunState::Running => self.pause(),
-            _ => self.start(),
+            _ => self.start(now_ms),
         }
     }
 
@@ -259,15 +283,12 @@ impl Timer {
         self.remaining_ms = u64::from(self.preset.focus_secs) * 1000;
     }
 
-    /// Restarts the current phase without touching the cycle position.
-    pub fn restart_phase(&mut self) {
-        self.remaining_ms = self.phase_total_ms();
-        self.state = RunState::Idle;
-    }
-
     /// Ends the current phase by hand. A skipped focus session is not counted
-    /// as completed — only time actually spent earns a round.
-    pub fn skip(&mut self) -> Transition {
+    /// as completed — only time actually spent earns a round. If the next
+    /// phase starts on its own, it starts from `now_ms` rather than from the
+    /// last tick.
+    pub fn skip(&mut self, now_ms: u64) -> Transition {
+        self.clock_ms = now_ms;
         self.transition(false)
     }
 
@@ -292,12 +313,6 @@ impl Timer {
 
         self.remaining_ms = 0;
         Some(self.transition(true))
-    }
-
-    /// Resets the internal clock reference without advancing anything. Call
-    /// this before resuming so time spent paused is not counted as elapsed.
-    pub fn sync_clock(&mut self, now_ms: u64) {
-        self.clock_ms = now_ms;
     }
 
     pub fn snapshot(&self) -> Snapshot {
@@ -425,7 +440,7 @@ mod tests {
     #[test]
     fn running_timer_drains_by_elapsed_time() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         t.advance(10_000);
         assert_eq!(t.remaining_secs(), 50);
         t.advance(25_000);
@@ -435,15 +450,14 @@ mod tests {
     #[test]
     fn paused_time_is_not_counted() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         t.advance(10_000);
         t.pause();
         t.advance(90_000);
         assert_eq!(t.remaining_secs(), 50);
         assert_eq!(t.state(), RunState::Paused);
 
-        t.sync_clock(90_000);
-        t.start();
+        t.start(90_000);
         t.advance(95_000);
         assert_eq!(t.remaining_secs(), 45);
     }
@@ -451,7 +465,7 @@ mod tests {
     #[test]
     fn focus_rolls_into_a_short_break_and_auto_starts() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         let transition = t.advance(60_000).expect("phase should end");
         assert_eq!(transition.ended, Phase::Focus);
         assert_eq!(transition.next, Phase::ShortBreak);
@@ -465,7 +479,7 @@ mod tests {
     #[test]
     fn break_rolls_into_focus_and_waits_for_the_user_by_default() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         t.advance(60_000);
         let transition = t.advance(80_000).expect("break should end");
         assert_eq!(transition.ended, Phase::ShortBreak);
@@ -477,12 +491,12 @@ mod tests {
     #[test]
     fn last_round_of_the_cycle_earns_a_long_break() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         t.advance(60_000); // focus 1 ends -> short break
         t.advance(80_000); // short break ends -> focus 2 (idle)
         assert_eq!(t.snapshot().round, 2);
 
-        t.start();
+        t.start(80_000);
         let transition = t.advance(140_000).expect("focus 2 should end");
         assert_eq!(transition.next, Phase::LongBreak);
         assert_eq!(t.remaining_secs(), 40);
@@ -491,10 +505,10 @@ mod tests {
     #[test]
     fn long_break_returns_to_round_one() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         t.advance(60_000);
         t.advance(80_000);
-        t.start();
+        t.start(80_000);
         t.advance(140_000); // -> long break, auto started
         let transition = t.advance(180_000).expect("long break should end");
         assert_eq!(transition.next, Phase::Focus);
@@ -505,7 +519,7 @@ mod tests {
     #[test]
     fn a_long_suspension_crosses_exactly_one_boundary() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         // Eight hours of sleep would otherwise replay dozens of phases.
         let transition = t.advance(8 * 60 * 60 * 1000).expect("phase should end");
         assert_eq!(transition.next, Phase::ShortBreak);
@@ -516,9 +530,9 @@ mod tests {
     #[test]
     fn skipping_focus_does_not_credit_a_session() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         t.advance(5_000);
-        let transition = t.skip();
+        let transition = t.skip(5_000);
         assert!(!transition.completed);
         assert_eq!(transition.next, Phase::ShortBreak);
         assert_eq!(t.completed_focus(), 0);
@@ -527,7 +541,7 @@ mod tests {
     #[test]
     fn reset_returns_to_the_top_of_the_cycle() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         t.advance(60_000);
         t.advance(80_000);
         t.reset();
@@ -542,18 +556,18 @@ mod tests {
     #[test]
     fn toggle_flips_between_running_and_paused() {
         let mut t = timer();
-        t.toggle();
+        t.toggle(0);
         assert_eq!(t.state(), RunState::Running);
-        t.toggle();
+        t.toggle(0);
         assert_eq!(t.state(), RunState::Paused);
-        t.toggle();
+        t.toggle(0);
         assert_eq!(t.state(), RunState::Running);
     }
 
     #[test]
     fn changing_preset_resets_to_its_focus_length() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         t.advance(30_000);
         t.set_preset(preset_by_id("deep").unwrap());
         let snap = t.snapshot();
@@ -565,7 +579,7 @@ mod tests {
     #[test]
     fn progress_tracks_elapsed_fraction() {
         let mut t = timer();
-        t.start();
+        t.start(0);
         t.advance(15_000);
         assert!((t.snapshot().progress - 0.25).abs() < 0.001);
     }
@@ -595,5 +609,78 @@ mod tests {
         for preset in builtin_presets() {
             assert_eq!(preset.clone(), preset.sanitized());
         }
+    }
+
+    #[test]
+    fn idle_time_before_starting_is_not_charged() {
+        // The clock is anchored by start itself, so a timer left idle for
+        // half a minute starts with its full length.
+        let mut t = timer();
+        t.advance(30_000);
+        t.start(30_000);
+        t.advance(40_000);
+        assert_eq!(t.remaining_secs(), 50);
+    }
+
+    #[test]
+    fn a_skip_that_auto_starts_runs_from_the_moment_of_the_skip() {
+        let mut t = timer();
+        t.start(0);
+        t.advance(1_000);
+        // 150 ms after the last tick, the user skips into the break.
+        t.skip(1_150);
+        t.advance(2_150);
+        assert_eq!(
+            t.remaining_secs(),
+            19,
+            "a full second of the break, not 1.15"
+        );
+    }
+
+    #[test]
+    fn retuning_an_untouched_phase_adopts_the_new_length() {
+        let mut t = timer();
+        t.retune(Preset::new("test", "Test", 90, 20, 40, 2));
+        assert_eq!(t.remaining_secs(), 90);
+        assert_eq!(t.state(), RunState::Idle);
+    }
+
+    #[test]
+    fn retuning_a_running_phase_keeps_the_session() {
+        let mut t = timer();
+        t.start(0);
+        t.advance(10_000);
+        t.retune(Preset::new("test", "Test", 120, 20, 40, 2));
+        let snap = t.snapshot();
+        assert_eq!(snap.remaining_secs, 50, "progress survives");
+        assert_eq!(snap.state, RunState::Running, "and so does the run state");
+        assert_eq!(snap.total_secs, 120);
+    }
+
+    #[test]
+    fn retuning_never_leaves_more_time_than_the_phase_holds() {
+        let mut t = timer();
+        t.start(0);
+        t.advance(5_000); // 55 s left of 60
+        t.retune(Preset::new("test", "Test", 30, 20, 40, 2));
+        assert_eq!(t.remaining_secs(), 30);
+    }
+
+    #[test]
+    fn retuning_to_fewer_rounds_pulls_the_cycle_back_in_range() {
+        let mut t = Timer::new(
+            Preset::new("test", "Test", 60, 20, 40, 4),
+            Behavior::default(),
+        );
+        t.start(0);
+        t.advance(60_000);
+        t.advance(80_000);
+        t.start(80_000);
+        t.advance(140_000);
+        t.advance(160_000); // into round 3
+        assert_eq!(t.snapshot().round, 3);
+        t.retune(Preset::new("test", "Test", 60, 20, 40, 2));
+        assert_eq!(t.snapshot().round, 2);
+        assert_eq!(t.snapshot().rounds, 2);
     }
 }

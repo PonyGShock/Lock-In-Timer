@@ -1,30 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { call, onState } from "./bridge";
+import { call } from "./bridge";
 import { Ring } from "./components/Ring";
 import { SettingsSheet } from "./components/SettingsSheet";
 import { GearIcon, Slider, Switch, WaveIcon } from "./components/ui";
-import type { AppState, Settings } from "./types";
+import { useLockIn } from "./store";
 
 export default function App() {
-  const [state, setState] = useState<AppState | null>(null);
+  const { state, command, patchSettings } = useLockIn();
   const [settingsOpen, setSettingsOpen] = useState(false);
-
-  useEffect(() => {
-    let live = true;
-    let unlisten: (() => void) | undefined;
-
-    void call<AppState>("get_state").then((next) => live && setState(next));
-    void onState((next) => live && setState(next)).then((off) => {
-      if (live) unlisten = off;
-      else off();
-    });
-
-    return () => {
-      live = false;
-      unlisten?.();
-    };
-  }, []);
+  const faceRef = useRef<HTMLDivElement>(null);
+  const gearRef = useRef<HTMLButtonElement>(null);
 
   const theme = state?.settings.theme ?? "system";
   useEffect(() => {
@@ -33,38 +19,38 @@ export default function App() {
     else root.dataset.theme = theme;
   }, [theme]);
 
-  const run = useCallback((command: string, args?: Record<string, unknown>) => {
-    void call<AppState>(command, args).then(setState);
-  }, []);
-
-  const patch = useCallback(
-    (changes: Partial<Settings>) => {
-      setState((current) => {
-        if (!current) return current;
-        const settings = { ...current.settings, ...changes };
-        void call<AppState>("update_settings", { settings }).then(setState);
-        // Apply locally straight away so sliders and switches never lag
-        // behind the finger that moved them.
-        return { ...current, settings };
-      });
-    },
-    [],
-  );
+  // The sheet covers the timer but does not remove it, so without this Tab
+  // walks into buttons nobody can see and Enter presses them.
+  useEffect(() => {
+    faceRef.current?.toggleAttribute("inert", settingsOpen);
+  }, [settingsOpen]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (settingsOpen) setSettingsOpen(false);
+        if (settingsOpen) closeSettings();
         else void call("hide_window");
+        return;
       }
-      if (event.code === "Space" && !settingsOpen) {
-        event.preventDefault();
-        run("timer_toggle");
-      }
+      if (event.code !== "Space" || settingsOpen) return;
+      // Holding the key would otherwise toggle twenty times a second.
+      if (event.repeat) return;
+      // A focused button or field answers Space itself. Handling it here as
+      // well toggled twice — once from this handler, once from the button.
+      // The target is the window itself when nothing has focus.
+      const target = event.target;
+      if (target instanceof Element && target.closest("button, input, [role='switch']")) return;
+      event.preventDefault();
+      command("timer_toggle");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [settingsOpen, run]);
+  });
+
+  function closeSettings() {
+    setSettingsOpen(false);
+    gearRef.current?.focus();
+  }
 
   if (!state) return <div className="card" data-phase="focus" />;
 
@@ -85,102 +71,102 @@ export default function App() {
 
   return (
     <div className="card" data-phase={timer.phase}>
-      <header className="header">
-        <span className="wordmark">Lock In</span>
-        <button
-          className="icon-button"
-          onClick={() => setSettingsOpen(true)}
-          aria-label="Settings"
-        >
-          <GearIcon />
-        </button>
-      </header>
-
-      <div className="presets">
-        {presets.map((preset) => (
+      <div className="face" ref={faceRef}>
+        <header className="header">
+          <span className="wordmark">Lock In</span>
           <button
-            key={preset.id}
-            className="chip"
-            aria-pressed={settings.presetId === preset.id}
-            onClick={() => run("set_preset", { id: preset.id })}
+            ref={gearRef}
+            className="icon-button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Settings"
           >
-            {preset.label}
+            <GearIcon />
           </button>
-        ))}
-      </div>
+        </header>
 
-      <div className="dial">
-        <Ring timer={timer} />
-        <div className="dots" aria-label={`Round ${timer.round} of ${timer.rounds}`}>
-          {Array.from({ length: timer.rounds }, (_, index) => (
-            <span
-              key={index}
-              className="dot"
-              data-done={index < roundsDone}
-              data-current={timer.phase === "focus" && index === roundsDone}
-            />
+        <div className="presets" role="group" aria-label="Timer length">
+          {presets.map((preset) => (
+            <button
+              key={preset.id}
+              className="chip"
+              aria-pressed={settings.presetId === preset.id}
+              onClick={() => command("select_preset", { id: preset.id })}
+            >
+              {preset.label}
+            </button>
           ))}
         </div>
-      </div>
 
-      <div className="transport">
-        <button className="primary" onClick={() => run("timer_toggle")}>
-          {primaryLabel}
-        </button>
-        <div className="secondary-row">
-          <button className="secondary" onClick={() => run("timer_skip")}>
-            Skip
-          </button>
-          <button
-            className="secondary"
-            disabled={untouched}
-            onClick={() => run("timer_reset")}
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-
-      <div className="shelf">
-        <div className="shelf__row">
-          <WaveIcon />
-          <div className="shelf__label">
-            <span className="shelf__title">Ambient noise</span>
-            <span className="shelf__hint">
-              {settings.noiseEnabled ? "Low and rumbling, like distant surf" : "Off"}
-            </span>
+        <div className="dial">
+          <Ring timer={timer} />
+          <div className="dots" aria-label={`Round ${timer.round} of ${timer.rounds}`}>
+            {Array.from({ length: timer.rounds }, (_, index) => (
+              <span
+                key={index}
+                className="dot"
+                data-done={index < roundsDone}
+                data-current={timer.phase === "focus" && index === roundsDone}
+              />
+            ))}
           </div>
-          <Switch
-            label="Ambient noise"
-            checked={settings.noiseEnabled}
-            onChange={(noiseEnabled) => patch({ noiseEnabled })}
-          />
         </div>
-        {settings.noiseEnabled && (
-          <div className="shelf__row" style={{ height: 30 }}>
-            <Slider
-              label="Noise volume"
-              value={settings.noiseVolume}
-              onChange={(noiseVolume) => patch({ noiseVolume })}
+
+        <div className="transport">
+          <button className="primary" onClick={() => command("timer_toggle")}>
+            {primaryLabel}
+          </button>
+          <div className="secondary-row">
+            <button className="secondary" onClick={() => command("timer_skip")}>
+              Skip
+            </button>
+            <button
+              className="secondary"
+              disabled={untouched}
+              onClick={() => command("timer_reset")}
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <div className="shelf">
+          <div className="shelf__row">
+            <WaveIcon />
+            <div className="shelf__label">
+              <span className="shelf__title">Ambient noise</span>
+              <span className="shelf__hint">
+                {settings.noiseEnabled ? "Low and rumbling, like distant surf" : "Off"}
+              </span>
+            </div>
+            <Switch
+              label="Ambient noise"
+              checked={settings.noiseEnabled}
+              onChange={(noiseEnabled) => patchSettings({ noiseEnabled })}
             />
           </div>
-        )}
-      </div>
+          {settings.noiseEnabled && (
+            <div className="shelf__row" style={{ height: 30 }}>
+              <Slider
+                label="Noise volume"
+                value={settings.noiseVolume}
+                onChange={(noiseVolume) => patchSettings({ noiseVolume })}
+              />
+            </div>
+          )}
+        </div>
 
-      <p className="footer">
-        {timer.completedFocus === 0
-          ? "No sessions finished today"
-          : `${timer.completedFocus} session${timer.completedFocus === 1 ? "" : "s"} today`}
-      </p>
+        <p className="footer">
+          {timer.completedFocus === 0
+            ? "No sessions finished today"
+            : `${timer.completedFocus} session${timer.completedFocus === 1 ? "" : "s"} today`}
+        </p>
+      </div>
 
       <SettingsSheet
         open={settingsOpen}
         state={state}
-        onPatch={patch}
-        onCustomPreset={(preset) => run("set_custom_preset", preset)}
-        onPreviewChime={() => void call("preview_chime")}
-        onClose={() => setSettingsOpen(false)}
-        onQuit={() => void call("quit_app")}
+        onPatch={patchSettings}
+        onClose={closeSettings}
       />
     </div>
   );

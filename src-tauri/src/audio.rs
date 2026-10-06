@@ -54,13 +54,15 @@ impl Audio {
         Audio { tx }
     }
 
-    /// Never blocks: audio is a nicety, and the UI thread waiting on it is not.
-    fn send(&self, command: Command) {
-        let _ = self.tx.try_send(command);
+    /// Never blocks: audio is a nicety, and the UI thread waiting on it is
+    /// not. Returns whether the command was accepted, so a caller that caches
+    /// what it sent can avoid caching something that was dropped.
+    fn send(&self, command: Command) -> bool {
+        self.tx.try_send(command).is_ok()
     }
 
-    pub fn set_noise(&self, enabled: bool, volume: f32) {
-        self.send(Command::SetNoise { enabled, volume });
+    pub fn set_noise(&self, enabled: bool, volume: f32) -> bool {
+        self.send(Command::SetNoise { enabled, volume })
     }
 
     pub fn chime(&self, voice: ChimeVoice, frequency: f32, gain: f32) {
@@ -75,14 +77,23 @@ impl Audio {
 /// An endless `rodio` source reading from shared noise state.
 struct NoiseStream {
     source: Arc<Mutex<NoiseSource>>,
+    sample_rate: u32,
     block: Vec<f32>,
     position: usize,
 }
 
 impl NoiseStream {
     fn new(source: Arc<Mutex<NoiseSource>>) -> Self {
+        // Ask the generator rather than assuming: it may adjust the rate it
+        // was given, and telling rodio anything else plays it at the wrong
+        // pitch with fades of the wrong length.
+        let sample_rate = source
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .sample_rate();
         NoiseStream {
             source,
+            sample_rate,
             block: vec![0.0; BLOCK_FRAMES * 2],
             position: BLOCK_FRAMES * 2,
         }
@@ -119,7 +130,7 @@ impl Source for NoiseStream {
     }
 
     fn sample_rate(&self) -> u32 {
-        SAMPLE_RATE
+        self.sample_rate
     }
 
     fn total_duration(&self) -> Option<Duration> {
@@ -135,11 +146,17 @@ fn run(rx: mpsc::Receiver<Command>) {
         return;
     };
 
-    let (Ok(noise_sink), Ok(chime_sink)) = (Sink::try_new(&handle), Sink::try_new(&handle)) else {
-        eprintln!("lock-in: could not open audio sinks; running silently");
+    let Ok(noise_sink) = Sink::try_new(&handle) else {
+        eprintln!("lock-in: could not open an audio sink; running silently");
         drain(rx);
         return;
     };
+    // Each chime gets its own sink, replacing the last. A shared sink queues
+    // chimes one after another, so five quick previews of a six-second bowl
+    // pushed a real end-of-focus chime half a minute late, into the wrong
+    // phase. Dropping a sink stops what it is playing, so a new chime simply
+    // takes over.
+    let mut chime_sink: Option<Sink> = None;
 
     let seed = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -169,7 +186,15 @@ fn run(rx: mpsc::Receiver<Command>) {
             }) => {
                 let samples = chime::render(voice, SAMPLE_RATE, frequency, gain);
                 if !samples.is_empty() {
-                    chime_sink.append(SamplesBuffer::new(2, SAMPLE_RATE, samples));
+                    match Sink::try_new(&handle) {
+                        Ok(sink) => {
+                            sink.append(SamplesBuffer::new(2, SAMPLE_RATE, samples));
+                            // The previous chime comes back out and is
+                            // dropped here, which is what silences it.
+                            drop(chime_sink.replace(sink));
+                        }
+                        Err(error) => eprintln!("lock-in: could not play a chime: {error}"),
+                    }
                 }
             }
             Err(RecvTimeoutError::Timeout) => {}
