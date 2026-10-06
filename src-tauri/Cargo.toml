@@ -21,7 +21,7 @@ lockin-core = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
-rodio = { version = "0.20", default-features = false }
+rodio = { version = "0.22", default-features = false }
 tauri = { version = "2", features = ["tray-icon", "image-png", "macos-private-api"] }
 tauri-plugin-notification = "2"
 tauri-plugin-opener = "2"
